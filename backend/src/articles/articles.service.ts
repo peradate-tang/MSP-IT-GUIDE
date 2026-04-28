@@ -19,10 +19,11 @@ export class ArticlesService implements OnModuleInit {
     private articlesRepository: Repository<Article>,
   ) {}
 
-  async onModuleInit() {
-    const count = await this.articlesRepository.count();
-    if (count === 0) {
-      await this.articlesRepository.save([
+async onModuleInit() {
+  const count = await this.articlesRepository.count();
+  if (count === 0) {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    await this.articlesRepository.save([
         {
           title: 'Getting Started with Network Configuration',
           slug: 'getting-started-network-configuration',
