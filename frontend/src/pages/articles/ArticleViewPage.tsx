@@ -67,7 +67,7 @@ export default function ArticleViewPage() {
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {article.viewCount} ครั้ง</span>
         </div>
 
-        {article.tags?.length > 0 && (
+        {Array.isArray(article.tags) && article.tags.length > 0 && (
           <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
             <Tag size={12} style={{ color: 'var(--text-3)' }} />
             {article.tags.map((t: string) => <span key={t} className="tag">#{t}</span>)}
