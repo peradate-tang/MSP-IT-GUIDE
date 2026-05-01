@@ -68,7 +68,7 @@ export default function HomePage() {
         <section style={{ marginBottom: 40 }}>
           <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: 'var(--text-2)' }}>หมวดหมู่</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
-            {categories.map((cat: any) => (
+            {Array.isArray(categories) && categories.map((cat: any) => (
               <Link key={cat.id} to={`/articles?categoryId=${cat.id}`}
                 style={{ textDecoration: 'none' }}>
                 <div className="card" style={{ textAlign: 'center', padding: '20px 12px', cursor: 'pointer', transition: 'border-color 0.15s' }}
