@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import api from '../../lib/api';
-import { Save, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Save, Eye, EyeOff, ArrowLeft, ImagePlus, Loader2 } from 'lucide-react';
 
 export default function ArticleEditPage() {
   const { id } = useParams();
@@ -13,6 +13,9 @@ export default function ArticleEditPage() {
   const isNew = !id || id === 'new';
   const [preview, setPreview] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -69,6 +72,43 @@ export default function ArticleEditPage() {
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [field]: e.target.value }));
 
+  const insertAtCursor = (text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setForm(f => ({ ...f, content: f.content + '\n' + text }));
+      return;
+    }
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newContent = form.content.slice(0, start) + text + form.content.slice(end);
+    setForm(f => ({ ...f, content: newContent }));
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + text.length;
+      textarea.focus();
+    }, 0);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      insertAtCursor(`\n![${file.name}](${baseUrl}${data.url})\n`);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'อัพโหลดรูปไม่สำเร็จ');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -104,13 +144,39 @@ export default function ArticleEditPage() {
           </div>
 
           <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">{preview ? 'Preview' : 'เนื้อหา (Markdown)'}</label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label className="form-label" style={{ margin: 0 }}>{preview ? 'Preview' : 'เนื้อหา (Markdown)'}</label>
+              {!preview && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleImageUpload}
+                  />
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    title="แทรกรูปภาพ"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem' }}
+                  >
+                    {uploading
+                      ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> กำลังอัพโหลด...</>
+                      : <><ImagePlus size={14} /> แทรกรูปภาพ</>
+                    }
+                  </button>
+                </>
+              )}
+            </div>
             {preview ? (
               <div className="card markdown-body" style={{ minHeight: 400, padding: 24 }}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content || '*ยังไม่มีเนื้อหา*'}</ReactMarkdown>
               </div>
             ) : (
               <textarea
+                ref={textareaRef}
                 className="input"
                 style={{ minHeight: 480, fontFamily: 'var(--font-mono)', fontSize: '0.875rem', resize: 'vertical' }}
                 placeholder="เขียนเนื้อหา Markdown ที่นี่..."
@@ -158,10 +224,13 @@ export default function ArticleEditPage() {
               <div><code style={{ color: 'var(--accent)' }}>`code`</code></div>
               <div><code style={{ color: 'var(--accent)' }}>```bash</code></div>
               <div><code style={{ color: 'var(--accent)' }}>- list item</code></div>
+              <div><code style={{ color: 'var(--accent)' }}>![alt](url)</code></div>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
