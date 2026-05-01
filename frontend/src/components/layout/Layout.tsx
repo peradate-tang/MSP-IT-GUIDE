@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../lib/authStore';
 import {
   BookOpen, Home, Search, Settings, Users, Shield,
-  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal
+  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2
 } from 'lucide-react';
 
 export default function Layout() {
@@ -78,6 +78,7 @@ export default function Layout() {
                   <NavItem to="/admin/categories" icon={<FolderOpen size={15} />} label="หมวดหมู่" active={location.pathname === '/admin/categories'} />
                   <NavItem to="/admin/users" icon={<Users size={15} />} label="ผู้ใช้งาน" active={location.pathname === '/admin/users'} />
                   <NavItem to="/admin/roles" icon={<Shield size={15} />} label="Role & สิทธิ์" active={location.pathname === '/admin/roles'} />
+                  <NavItem to="/admin/report" icon={<BarChart2 size={15} />} label="รายงาน" active={location.pathname === '/admin/report'} />
                 </div>
               )}
             </div>

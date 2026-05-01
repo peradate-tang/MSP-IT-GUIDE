@@ -11,6 +11,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminRolesPage from './pages/admin/AdminRolesPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminArticlesPage from './pages/admin/AdminArticlesPage';
+import AdminReportPage from './pages/admin/AdminReportPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="admin/users" element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/roles" element={<RequireAuth><RequireAdmin><AdminRolesPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/categories" element={<RequireAuth><RequireAdmin><AdminCategoriesPage /></RequireAdmin></RequireAuth>} />
+          <Route path="admin/report" element={<RequireAuth><RequireAdmin><AdminReportPage /></RequireAdmin></RequireAuth>} />
         </Route>
       </Routes>
     </BrowserRouter>
