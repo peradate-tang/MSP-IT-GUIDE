@@ -76,8 +76,8 @@ export class ArticlesService {
           await this.articlesRepository.save(entity);
         }
       }
-    } catch (e) {
-      console.error('Article seed error (non-fatal):', e.message);
+    } catch (e: any) {
+      console.error('Article seed error (non-fatal):', e?.message);
     }
   }
 
@@ -126,7 +126,7 @@ export class ArticlesService {
       slug,
       authorId,
     } as any);
-    return this.articlesRepository.save(entity);
+    return this.articlesRepository.save(entity) as unknown as Article;
   }
 
   async update(id: number, data: Partial<Article>): Promise<Article> {
