@@ -2,11 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { useAuthStore } from '../../lib/authStore';
 import { ArrowLeft, Clock, Eye, Pencil, Tag } from 'lucide-react';
 
 export default function ArticleViewPage() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const user = useAuthStore(s => s.user);
   const navigate = useNavigate();
@@ -26,9 +28,9 @@ export default function ArticleViewPage() {
   if (isError || !article) return (
     <div className="empty-state">
       <div className="empty-state-icon">🔍</div>
-      <h3>ไม่พบบทความ</h3>
-      <p>บทความนี้อาจถูกลบหรือ URL ไม่ถูกต้อง</p>
-      <Link to="/articles" className="btn btn-secondary" style={{ marginTop: 16, display: 'inline-flex' }}>กลับไปยังรายการ</Link>
+      <h3>{t('articles.not_found')}</h3>
+      <p>{t('articles.not_found_hint')}</p>
+      <Link to="/articles" className="btn btn-secondary" style={{ marginTop: 16, display: 'inline-flex' }}>{t('articles.back_to_list')}</Link>
     </div>
   );
 
@@ -36,7 +38,7 @@ export default function ArticleViewPage() {
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
       {/* Back */}
       <button className="btn btn-ghost btn-sm" style={{ marginBottom: 20 }} onClick={() => navigate(-1)}>
-        <ArrowLeft size={14} /> กลับ
+        <ArrowLeft size={14} /> {t('common.back')}
       </button>
 
       {/* Header */}
@@ -48,7 +50,7 @@ export default function ArticleViewPage() {
           </div>
           {canEdit && (
             <Link to={`/articles/${article.id}/edit`} className="btn btn-secondary btn-sm">
-              <Pencil size={13} /> แก้ไข
+              <Pencil size={13} /> {t('common.edit')}
             </Link>
           )}
         </div>
@@ -64,13 +66,13 @@ export default function ArticleViewPage() {
         <div style={{ display: 'flex', gap: 16, fontSize: '0.8rem', color: 'var(--text-3)', flexWrap: 'wrap' }}>
           {article.author && <span>โดย <strong style={{ color: 'var(--text-2)' }}>{article.author.fullName || article.author.username}</strong></span>}
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> {new Date(article.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {article.viewCount} ครั้ง</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {article.viewCount} {t('articles.views')}</span>
         </div>
 
         {Array.isArray(article.tags) && article.tags.length > 0 && (
           <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
             <Tag size={12} style={{ color: 'var(--text-3)' }} />
-            {article.tags.map((t: string) => <span key={t} className="tag">#{t}</span>)}
+            {article.tags.map((tag: string) => <span key={tag} className="tag">#{tag}</span>)}
           </div>
         )}
       </div>
@@ -86,7 +88,7 @@ export default function ArticleViewPage() {
       {/* Footer */}
       <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
         <Link to="/articles" className="btn btn-secondary">
-          <ArrowLeft size={14} /> กลับไปยังรายการบทความ
+          <ArrowLeft size={14} /> {t('articles.back_to_list')}
         </Link>
       </div>
     </div>

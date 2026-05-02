@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Search, Clock, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ArticleListPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const page = Number(searchParams.get('page') || 1);
@@ -29,19 +31,19 @@ export default function ArticleListPage() {
   return (
     <div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24, flexWrap: 'wrap' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, flex: 1 }}>บทความทั้งหมด</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, flex: 1 }}>{t('articles.title')}</h1>
         <form onSubmit={doSearch} style={{ display: 'flex', gap: 8 }}>
           <div style={{ position: 'relative' }}>
             <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
             <input
               className="input"
               style={{ paddingLeft: 34, width: 240 }}
-              placeholder="ค้นหาบทความ..."
+              placeholder={t('articles.search_placeholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <button className="btn btn-secondary" type="submit">ค้นหา</button>
+          <button className="btn btn-secondary" type="submit">{t('common.search')}</button>
         </form>
       </div>
 
@@ -50,7 +52,7 @@ export default function ArticleListPage() {
         <button
           className={`btn btn-sm ${!categoryId ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setSearchParams(p => { p.delete('categoryId'); p.set('page', '1'); return p; })}
-        >ทั้งหมด</button>
+        >{t('common.all')}</button>
         {categories?.map((cat: any) => (
           <button
             key={cat.id}
@@ -65,8 +67,8 @@ export default function ArticleListPage() {
       ) : data?.data?.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">📭</div>
-          <h3>ไม่พบบทความ</h3>
-          <p>ลองเปลี่ยนคำค้นหาหรือหมวดหมู่</p>
+          <h3>{t('articles.no_results')}</h3>
+          <p>{t('articles.no_results_hint')}</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
@@ -102,7 +104,7 @@ export default function ArticleListPage() {
             disabled={page <= 1}
             onClick={() => setSearchParams(p => { p.set('page', String(page - 1)); return p; })}
           ><ChevronLeft size={14} /></button>
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-2)' }}>หน้า {page} / {data.totalPages}</span>
+          <span style={{ fontSize: '0.875rem', color: 'var(--text-2)' }}>{t('articles.page', { page, total: data.totalPages })}</span>
           <button className="btn btn-secondary btn-sm"
             disabled={page >= data.totalPages}
             onClick={() => setSearchParams(p => { p.set('page', String(page + 1)); return p; })}

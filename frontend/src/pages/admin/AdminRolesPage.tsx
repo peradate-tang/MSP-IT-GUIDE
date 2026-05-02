@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 
 const ALL_PERMS = ['articles:read', 'articles:write', 'articles:delete', 'categories:write', 'users:read'];
 
 function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const isNew = !role?.id;
   const [form, setForm] = useState({
@@ -18,7 +20,7 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
   const mutation = useMutation({
     mutationFn: () => isNew ? api.post('/roles', form) : api.put(`/roles/${role.id}`, form),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['roles'] }); onClose(); },
-    onError: (e: any) => setError(e?.response?.data?.message || 'เกิดข้อผิดพลาด'),
+    onError: (e: any) => setError(e?.response?.data?.message || t('common.error')),
   });
 
   const togglePerm = (p: string) => setForm(f => ({
@@ -30,28 +32,28 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <span className="modal-title">{isNew ? 'สร้าง Role ใหม่' : 'แก้ไข Role'}</span>
+          <span className="modal-title">{isNew ? t('admin.roles.new') : t('common.edit')}</span>
           <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
           <div className="form-group">
-            <label className="form-label">ชื่อ Role</label>
+            <label className="form-label">{t('admin.roles.name_label')}</label>
             <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
           </div>
           <div className="form-group">
-            <label className="form-label">คำอธิบาย</label>
+            <label className="form-label">{t('common.name')}</label>
             <input className="input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
           </div>
           <div className="form-group">
-            <label className="form-label">สิทธิ์การเข้าถึง</label>
+            <label className="form-label">{t('admin.roles.permissions_label')}</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
                 <input type="checkbox"
                   checked={form.permissions.includes('*')}
                   onChange={() => togglePerm('*')}
                 />
-                <strong style={{ color: 'var(--accent)' }}>* — สิทธิ์ทั้งหมด (Super Admin)</strong>
+                <strong style={{ color: 'var(--accent)' }}>* — {t('admin.roles.all_permissions')}</strong>
               </label>
               {!form.permissions.includes('*') && ALL_PERMS.map(p => (
                 <label key={p} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
@@ -63,9 +65,9 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>ยกเลิก</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn btn-primary" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            {mutation.isPending ? 'กำลังบันทึก...' : 'บันทึก'}
+            {mutation.isPending ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -74,6 +76,7 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
 }
 
 export default function AdminRolesPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [modal, setModal] = useState<any>(null);
 
@@ -89,8 +92,8 @@ export default function AdminRolesPage() {
       {modal !== null && <RoleModal role={modal} onClose={() => setModal(null)} />}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>จัดการ Role & สิทธิ์</h1>
-        <button className="btn btn-primary" onClick={() => setModal({})}><Plus size={15} /> สร้าง Role</button>
+        <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.roles.title')}</h1>
+        <button className="btn btn-primary" onClick={() => setModal({})}><Plus size={15} /> {t('admin.roles.new')}</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -118,7 +121,7 @@ export default function AdminRolesPage() {
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setModal(r)}><Pencil size={13} /></button>
                   <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                    onClick={() => confirm(`ลบ role "${r.name}" ?`) && deleteMutation.mutate(r.id)}>
+                    onClick={() => confirm(t('admin.roles.confirm_delete', { name: r.name })) && deleteMutation.mutate(r.id)}>
                     <Trash2 size={13} />
                   </button>
                 </div>
