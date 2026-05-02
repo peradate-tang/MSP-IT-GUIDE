@@ -1,12 +1,41 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
 import {
-  BookOpen, Home, Search, Settings, Users, Shield,
-  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2
+  BookOpen, Home, Users, Shield,
+  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2, Settings
 } from 'lucide-react';
+import i18n from '../../lib/i18n';
+
+function LangToggle() {
+  const [lang, setLang] = useState(i18n.language);
+  const toggle = () => {
+    const next = lang === 'th' ? 'en' : 'th';
+    i18n.changeLanguage(next);
+    localStorage.setItem('lang', next);
+    setLang(next);
+  };
+  return (
+    <button
+      onClick={toggle}
+      style={{
+        background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 6,
+        padding: '4px 10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+        color: 'var(--text-2)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em',
+        transition: 'border-color 0.15s',
+      }}
+      onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'}
+      onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
+      title="Switch language"
+    >
+      {lang === 'th' ? '🇹🇭 TH' : '🇬🇧 EN'}
+    </button>
+  );
+}
 
 export default function Layout() {
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -14,9 +43,6 @@ export default function Layout() {
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
   const isAdmin = user?.role?.name === 'admin';
   const isEditor = user?.role?.name === 'editor' || isAdmin;
-
-  const navLink = (to: string) =>
-    `nav-item ${location.pathname === to || location.pathname.startsWith(to + '/') ? 'nav-item-active' : ''}`;
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -31,8 +57,8 @@ export default function Layout() {
         transition: 'transform 0.2s',
       }}>
         {/* Logo */}
-        <div style={{ padding: '20px 16px', borderBottom: '1px solid var(--border)' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 10 }}>
             <div style={{
               width: 32, height: 32, background: 'var(--accent)', borderRadius: 6,
               display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -44,15 +70,16 @@ export default function Layout() {
               <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>Knowledge Base</div>
             </div>
           </Link>
+          <LangToggle />
         </div>
 
         {/* Nav */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 8px' }}>
-          <NavItem to="/" icon={<Home size={15} />} label="หน้าหลัก" active={location.pathname === '/'} />
-          <NavItem to="/articles" icon={<BookOpen size={15} />} label="บทความทั้งหมด" active={location.pathname.startsWith('/articles') && !location.pathname.includes('edit') && !location.pathname.includes('new')} />
+          <NavItem to="/" icon={<Home size={15} />} label={t('nav.home')} active={location.pathname === '/'} />
+          <NavItem to="/articles" icon={<BookOpen size={15} />} label={t('nav.articles')} active={location.pathname.startsWith('/articles') && !location.pathname.includes('edit') && !location.pathname.includes('new')} />
 
           {isEditor && (
-            <NavItem to="/articles/new" icon={<FileText size={15} />} label="เขียนบทความใหม่" active={location.pathname === '/articles/new'} />
+            <NavItem to="/articles/new" icon={<FileText size={15} />} label={t('articles.new')} active={location.pathname === '/articles/new'} />
           )}
 
           {isAdmin && (
@@ -68,17 +95,17 @@ export default function Layout() {
                 }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Settings size={12} /> การจัดการ
+                  <Settings size={12} /> {t('nav.admin')}
                 </span>
                 <ChevronDown size={12} style={{ transform: adminOpen ? 'rotate(180deg)' : '', transition: '0.2s' }} />
               </button>
               {adminOpen && (
                 <div style={{ paddingLeft: 8 }}>
-                  <NavItem to="/admin/articles" icon={<FileText size={15} />} label="จัดการบทความ" active={location.pathname === '/admin/articles'} />
-                  <NavItem to="/admin/categories" icon={<FolderOpen size={15} />} label="หมวดหมู่" active={location.pathname === '/admin/categories'} />
-                  <NavItem to="/admin/users" icon={<Users size={15} />} label="ผู้ใช้งาน" active={location.pathname === '/admin/users'} />
-                  <NavItem to="/admin/roles" icon={<Shield size={15} />} label="Role & สิทธิ์" active={location.pathname === '/admin/roles'} />
-                  <NavItem to="/admin/report" icon={<BarChart2 size={15} />} label="รายงาน" active={location.pathname === '/admin/report'} />
+                  <NavItem to="/admin/articles" icon={<FileText size={15} />} label={t('nav.admin_articles')} active={location.pathname === '/admin/articles'} />
+                  <NavItem to="/admin/categories" icon={<FolderOpen size={15} />} label={t('nav.admin_categories')} active={location.pathname === '/admin/categories'} />
+                  <NavItem to="/admin/users" icon={<Users size={15} />} label={t('nav.admin_users')} active={location.pathname === '/admin/users'} />
+                  <NavItem to="/admin/roles" icon={<Shield size={15} />} label={t('nav.admin_roles')} active={location.pathname === '/admin/roles'} />
+                  <NavItem to="/admin/report" icon={<BarChart2 size={15} />} label={t('nav.admin_report')} active={location.pathname === '/admin/report'} />
                 </div>
               )}
             </div>
@@ -107,25 +134,22 @@ export default function Layout() {
                 </div>
               </div>
               <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={handleLogout}>
-                <LogOut size={14} /> ออกจากระบบ
+                <LogOut size={14} /> {t('nav.logout')}
               </button>
             </div>
           ) : (
-            <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>เข้าสู่ระบบ</Link>
+            <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>{t('login.submit')}</Link>
           )}
         </div>
       </aside>
 
-      {/* Overlay */}
       {sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99
         }} />
       )}
 
-      {/* Main */}
       <div style={{ flex: 1, marginLeft: 240, minWidth: 0 }}>
-        {/* Topbar mobile */}
         <header style={{
           display: 'none', padding: '12px 16px',
           background: 'var(--bg-2)', borderBottom: '1px solid var(--border)',

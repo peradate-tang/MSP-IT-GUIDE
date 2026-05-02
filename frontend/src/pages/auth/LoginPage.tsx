@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
 import { Terminal, Lock, User } from 'lucide-react';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +19,7 @@ export default function LoginPage() {
       await login(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      setError(err?.response?.data?.message || t('login.invalid'));
     }
   };
 
@@ -43,18 +45,18 @@ export default function LoginPage() {
           }}>
             <Terminal size={24} color="#000" />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>IT Guide</h1>
-          <p style={{ color: 'var(--text-3)', fontSize: '0.875rem', fontFamily: 'var(--font-mono)' }}>Knowledge Base System</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>{t('login.title')}</h1>
+          <p style={{ color: 'var(--text-3)', fontSize: '0.875rem', fontFamily: 'var(--font-mono)' }}>{t('login.subtitle')}</p>
         </div>
 
         <div className="card" style={{ borderColor: 'var(--border)' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>เข้าสู่ระบบ</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 20 }}>{t('login.heading')}</h2>
 
           {error && <div className="alert alert-error" style={{ marginBottom: 16 }}>{error}</div>}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div className="form-group">
-              <label className="form-label">ชื่อผู้ใช้</label>
+              <label className="form-label">{t('login.username')}</label>
               <div style={{ position: 'relative' }}>
                 <User size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
                 <input
@@ -63,7 +65,7 @@ export default function LoginPage() {
                   type="text"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  placeholder="username"
+                  placeholder={t('login.username_placeholder')}
                   required
                   autoFocus
                 />
@@ -71,7 +73,7 @@ export default function LoginPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">รหัสผ่าน</label>
+              <label className="form-label">{t('login.password')}</label>
               <div style={{ position: 'relative' }}>
                 <Lock size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
                 <input
@@ -80,19 +82,19 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t('login.password_placeholder')}
                   required
                 />
               </div>
             </div>
 
             <button className="btn btn-primary" type="submit" disabled={isLoading} style={{ marginTop: 4 }}>
-              {isLoading ? <><div className="spinner" style={{ width: 16, height: 16 }} /> กำลังเข้าสู่ระบบ...</> : 'เข้าสู่ระบบ'}
+              {isLoading ? <><div className="spinner" style={{ width: 16, height: 16 }} /> {t('login.submitting')}</> : t('login.submit')}
             </button>
           </form>
 
           <div style={{ marginTop: 16, padding: '12px', background: 'var(--bg-3)', borderRadius: 'var(--radius)', fontSize: '0.8rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
-            <div>default: admin / admin1234</div>
+            <div>{t('login.default_hint')}</div>
           </div>
         </div>
       </div>
