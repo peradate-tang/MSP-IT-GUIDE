@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import { BookOpen, FolderOpen, TrendingUp, Clock, ArrowRight } from 'lucide-react';
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.get('/categories').then(r => r.data),
@@ -34,16 +36,18 @@ export default function HomePage() {
             fontSize: '0.75rem', color: 'var(--accent)', fontFamily: 'var(--font-mono)',
             marginBottom: 16,
           }}>
-            📖 IT Knowledge Base
+            {t('home.badge')}
           </div>
           <h1 style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 12 }}>
-            ค้นหาคำตอบด้านไอที<br />ที่คุณต้องการ
+            {t('home.hero_title').split('\n').map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+            ))}
           </h1>
           <p style={{ color: 'var(--text-2)', fontSize: '1rem', maxWidth: 480, marginBottom: 24 }}>
-            รวมคู่มือ, How-to guide, และเอกสารทางเทคนิคสำหรับทีม IT ของคุณ
+            {t('home.hero_desc')}
           </p>
           <Link to="/articles" className="btn btn-primary">
-            ดูบทความทั้งหมด <ArrowRight size={15} />
+            {t('home.view_all')} <ArrowRight size={15} />
           </Link>
         </div>
       </div>
@@ -51,9 +55,9 @@ export default function HomePage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 40 }}>
         {[
-          { icon: <BookOpen size={20} />, label: 'บทความ', value: articles?.total || 0 },
-          { icon: <FolderOpen size={20} />, label: 'หมวดหมู่', value: categories?.length || 0 },
-          { icon: <TrendingUp size={20} />, label: 'ยอดอ่านวันนี้', value: '—' },
+          { icon: <BookOpen size={20} />, label: t('nav.articles'), value: articles?.total || 0 },
+          { icon: <FolderOpen size={20} />, label: t('home.categories'), value: categories?.length || 0 },
+          { icon: <TrendingUp size={20} />, label: t('home.views'), value: '—' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ textAlign: 'center', padding: '20px' }}>
             <div style={{ color: 'var(--accent)', marginBottom: 8 }}>{s.icon}</div>
@@ -66,7 +70,7 @@ export default function HomePage() {
       {/* Categories */}
       {categories?.length > 0 && (
         <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: 'var(--text-2)' }}>หมวดหมู่</h2>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: 'var(--text-2)' }}>{t('home.categories')}</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
             {Array.isArray(categories) && categories.map((cat: any) => (
               <Link key={cat.id} to={`/articles?categoryId=${cat.id}`}
@@ -87,8 +91,8 @@ export default function HomePage() {
       {/* Recent articles */}
       <section>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-2)' }}>บทความล่าสุด</h2>
-          <Link to="/articles" style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>ดูทั้งหมด →</Link>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-2)' }}>{t('home.recent')}</h2>
+          <Link to="/articles" style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>{t('home.view_all_link')}</Link>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {articles?.data?.map((article: any) => (
