@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 
 function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const isNew = !user?.id;
   const [form, setForm] = useState({
@@ -24,7 +26,7 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
       return api.put(`/users/${user.id}`, payload);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); onClose(); },
-    onError: (e: any) => setError(e?.response?.data?.message || 'เกิดข้อผิดพลาด'),
+    onError: (e: any) => setError(e?.response?.data?.message || t('common.error')),
   });
 
   const set = (f: string) => (e: any) => setForm(p => ({ ...p, [f]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
@@ -33,29 +35,29 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <span className="modal-title">{isNew ? 'เพิ่มผู้ใช้ใหม่' : 'แก้ไขผู้ใช้'}</span>
+          <span className="modal-title">{isNew ? t('admin.users.new') : t('common.edit')}</span>
           <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
           <div className="form-group">
-            <label className="form-label">ชื่อผู้ใช้</label>
+            <label className="form-label">{t('admin.users.username_label')}</label>
             <input className="input" value={form.username} onChange={set('username')} disabled={!isNew} />
           </div>
           <div className="form-group">
-            <label className="form-label">อีเมล</label>
+            <label className="form-label">{t('admin.users.email_label')}</label>
             <input className="input" type="email" value={form.email} onChange={set('email')} />
           </div>
           <div className="form-group">
-            <label className="form-label">ชื่อ-นามสกุล</label>
+            <label className="form-label">{t('admin.users.fullname_label')}</label>
             <input className="input" value={form.fullName} onChange={set('fullName')} />
           </div>
           <div className="form-group">
-            <label className="form-label">{isNew ? 'รหัสผ่าน' : 'รหัสผ่านใหม่ (ว่างถ้าไม่เปลี่ยน)'}</label>
+            <label className="form-label">{t('admin.users.password_label')} {!isNew && <span style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>{t('admin.users.password_hint')}</span>}</label>
             <input className="input" type="password" value={form.password} onChange={set('password')} />
           </div>
           <div className="form-group">
-            <label className="form-label">Role</label>
+            <label className="form-label">{t('admin.users.role_label')}</label>
             <select className="input" value={form.roleId} onChange={set('roleId')}>
               <option value="">— เลือก role —</option>
               {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -67,9 +69,9 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>ยกเลิก</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn btn-primary" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            {mutation.isPending ? 'กำลังบันทึก...' : 'บันทึก'}
+            {mutation.isPending ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -78,6 +80,7 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
 }
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [modal, setModal] = useState<any>(null);
 
@@ -94,20 +97,20 @@ export default function AdminUsersPage() {
       {modal !== null && <UserModal user={modal} roles={roles || []} onClose={() => setModal(null)} />}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>จัดการผู้ใช้งาน</h1>
-        <button className="btn btn-primary" onClick={() => setModal({})}><Plus size={15} /> เพิ่มผู้ใช้</button>
+        <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.users.title')}</h1>
+        <button className="btn btn-primary" onClick={() => setModal({})}><Plus size={15} /> {t('admin.users.new')}</button>
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="table">
           <thead>
             <tr>
-              <th>ผู้ใช้</th>
-              <th>อีเมล</th>
-              <th>Role</th>
-              <th>สถานะ</th>
+              <th>{t('admin.users.col_username')}</th>
+              <th>{t('admin.users.col_email')}</th>
+              <th>{t('admin.users.col_role')}</th>
+              <th>{t('common.status')}</th>
               <th>สร้างเมื่อ</th>
-              <th style={{ textAlign: 'right' }}>จัดการ</th>
+              <th style={{ textAlign: 'right' }}>{t('admin.users.col_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +145,7 @@ export default function AdminUsersPage() {
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     <button className="btn btn-ghost btn-sm" onClick={() => setModal(u)}><Pencil size={13} /></button>
                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                      onClick={() => confirm(`ลบผู้ใช้ "${u.username}" ?`) && deleteMutation.mutate(u.id)}>
+                      onClick={() => confirm(t('admin.users.confirm_delete', { username: u.username })) && deleteMutation.mutate(u.id)}>
                       <Trash2 size={13} />
                     </button>
                   </div>

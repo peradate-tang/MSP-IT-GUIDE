@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Save, Eye, EyeOff, ArrowLeft, ImagePlus, Loader2 } from 'lucide-react';
 
 export default function ArticleEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -55,7 +57,7 @@ export default function ArticleEditPage() {
       const payload = {
         ...form,
         categoryId: form.categoryId ? Number(form.categoryId) : null,
-        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        tags: form.tags ? form.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
       };
       if (isNew) return api.post('/articles', payload).then(r => r.data);
       return api.put(`/articles/${id}`, payload).then(r => r.data);
@@ -65,7 +67,7 @@ export default function ArticleEditPage() {
       navigate(`/articles/${data.slug}`);
     },
     onError: (err: any) => {
-      setError(err?.response?.data?.message || 'เกิดข้อผิดพลาด');
+      setError(err?.response?.data?.message || t('common.error'));
     },
   });
 
@@ -103,7 +105,7 @@ export default function ArticleEditPage() {
       const baseUrl = import.meta.env.VITE_API_URL || '';
       insertAtCursor(`\n![${file.name}](${baseUrl}${data.url})\n`);
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'อัพโหลดรูปไม่สำเร็จ');
+      setError(err?.response?.data?.message || t('articles.upload_error'));
     } finally {
       setUploading(false);
     }
@@ -116,15 +118,15 @@ export default function ArticleEditPage() {
           <ArrowLeft size={14} />
         </button>
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>
-          {isNew ? 'เขียนบทความใหม่' : 'แก้ไขบทความ'}
+          {isNew ? t('articles.new') : t('articles.edit')}
         </h1>
         <button className="btn btn-ghost btn-sm" onClick={() => setPreview(!preview)}>
           {preview ? <EyeOff size={14} /> : <Eye size={14} />}
-          {preview ? 'Editor' : 'Preview'}
+          {preview ? 'Editor' : t('articles.preview')}
         </button>
         <button className="btn btn-primary" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
           <Save size={14} />
-          {saveMutation.isPending ? 'กำลังบันทึก...' : 'บันทึก'}
+          {saveMutation.isPending ? t('common.saving') : t('common.save')}
         </button>
       </div>
 
@@ -134,18 +136,18 @@ export default function ArticleEditPage() {
         {/* Main */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="form-group">
-            <label className="form-label">หัวข้อ</label>
-            <input className="input" style={{ fontSize: '1.1rem', fontWeight: 600 }} placeholder="หัวข้อบทความ" value={form.title} onChange={set('title')} />
+            <label className="form-label">{t('articles.title_label')}</label>
+            <input className="input" style={{ fontSize: '1.1rem', fontWeight: 600 }} placeholder={t('articles.title_placeholder')} value={form.title} onChange={set('title')} />
           </div>
 
           <div className="form-group">
-            <label className="form-label">สรุปย่อ</label>
-            <textarea className="input" rows={2} placeholder="อธิบายสั้นๆ เกี่ยวกับบทความนี้" value={form.excerpt} onChange={set('excerpt')} />
+            <label className="form-label">{t('articles.excerpt_label')}</label>
+            <textarea className="input" rows={2} placeholder={t('articles.excerpt_placeholder')} value={form.excerpt} onChange={set('excerpt')} />
           </div>
 
           <div className="form-group" style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <label className="form-label" style={{ margin: 0 }}>{preview ? 'Preview' : 'เนื้อหา (Markdown)'}</label>
+              <label className="form-label" style={{ margin: 0 }}>{preview ? t('articles.preview') : t('articles.content_label')}</label>
               {!preview && (
                 <>
                   <input
@@ -159,12 +161,12 @@ export default function ArticleEditPage() {
                     className="btn btn-ghost btn-sm"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    title="แทรกรูปภาพ"
+                    title={t('articles.insert_image')}
                     style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem' }}
                   >
                     {uploading
-                      ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> กำลังอัพโหลด...</>
-                      : <><ImagePlus size={14} /> แทรกรูปภาพ</>
+                      ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> {t('articles.uploading')}</>
+                      : <><ImagePlus size={14} /> {t('articles.insert_image')}</>
                     }
                   </button>
                 </>
@@ -172,14 +174,14 @@ export default function ArticleEditPage() {
             </div>
             {preview ? (
               <div className="card markdown-body" style={{ minHeight: 400, padding: 24 }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content || '*ยังไม่มีเนื้อหา*'}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content || t('articles.no_content')}</ReactMarkdown>
               </div>
             ) : (
               <textarea
                 ref={textareaRef}
                 className="input"
                 style={{ minHeight: 480, fontFamily: 'var(--font-mono)', fontSize: '0.875rem', resize: 'vertical' }}
-                placeholder="เขียนเนื้อหา Markdown ที่นี่..."
+                placeholder={t('articles.content_placeholder')}
                 value={form.content}
                 onChange={set('content')}
               />
@@ -191,7 +193,7 @@ export default function ArticleEditPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div className="form-group">
-              <label className="form-label">สถานะ</label>
+              <label className="form-label">{t('common.status')}</label>
               <select className="input" value={form.status} onChange={set('status')}>
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -200,9 +202,9 @@ export default function ArticleEditPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">หมวดหมู่</label>
+              <label className="form-label">{t('articles.category')}</label>
               <select className="input" value={form.categoryId} onChange={set('categoryId')}>
-                <option value="">— ไม่ระบุ —</option>
+                <option value="">{t('articles.no_category')}</option>
                 {categories?.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                 ))}
@@ -210,8 +212,8 @@ export default function ArticleEditPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Tags (คั่นด้วยจุลภาค)</label>
-              <input className="input" placeholder="linux, server, tutorial" value={form.tags} onChange={set('tags')} />
+              <label className="form-label">{t('articles.tags')}</label>
+              <input className="input" placeholder={t('articles.tags_placeholder')} value={form.tags} onChange={set('tags')} />
             </div>
           </div>
 
