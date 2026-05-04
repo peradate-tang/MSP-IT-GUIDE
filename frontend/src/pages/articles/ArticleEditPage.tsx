@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { useTranslation } from 'react-i18next';
-import api from '../../lib/api';
+import api, { BASE_URL } from '../../lib/api';
 import { Save, Eye, EyeOff, ArrowLeft, ImagePlus, Loader2, Bold, Italic, Code, Link, List, Heading2, Image } from 'lucide-react';
 
 export default function ArticleEditPage() {
@@ -140,7 +140,7 @@ export default function ArticleEditPage() {
       const { data } = await api.post('/upload/video', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const baseUrl = BASE_URL;
       insertAtCursor(`\n<video controls width="100%"><source src="${baseUrl}${data.url}" type="${file.type}" /></video>\n`);
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
@@ -161,7 +161,7 @@ export default function ArticleEditPage() {
       const { data } = await api.post('/upload/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const baseUrl = BASE_URL;
       insertAtCursor(`\n![${file.name}](${baseUrl}${data.url})\n`);
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
