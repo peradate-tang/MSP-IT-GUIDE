@@ -81,6 +81,7 @@
     "image_alt_prompt": "ใส่คำอธิบายรูปภาพ (alt text)",
     "insert_video": "แทรกวิดีโอ (YouTube / URL)",
     "video_url_prompt": "ใส่ URL วิดีโอ (YouTube หรือไฟล์วิดีโอ)",
+    "upload_video": "อัพโหลดวิดีโอจากเครื่อง",
     "uploading": "กำลังอัพโหลด...",
     "upload_error": "อัพโหลดรูปไม่สำเร็จ",
     "preview": "Preview",

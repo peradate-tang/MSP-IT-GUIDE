@@ -17,7 +17,9 @@ export default function ArticleEditPage() {
   const [preview, setPreview] = useState(false);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [form, setForm] = useState({
@@ -126,6 +128,27 @@ export default function ArticleEditPage() {
     }, 0);
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    setUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/upload/video', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      insertAtCursor(`\n<video controls width="100%"><source src="${baseUrl}${data.url}" type="${file.type}" /></video>\n`);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || t('articles.upload_error'));
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -188,6 +211,7 @@ export default function ArticleEditPage() {
             {!preview && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6, flexWrap: 'wrap', padding: '4px 8px', background: 'var(--bg-3)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
                 <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+                <input ref={videoInputRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={handleVideoUpload} />
                 <ToolbarBtn onClick={() => wrapSelection('**', '**', 'bold')} title="Bold"><Bold size={13} /></ToolbarBtn>
                 <ToolbarBtn onClick={() => wrapSelection('*', '*', 'italic')} title="Italic"><Italic size={13} /></ToolbarBtn>
                 <ToolbarBtn onClick={() => wrapSelection('`', '`', 'code')} title="Inline code"><Code size={13} /></ToolbarBtn>
@@ -206,6 +230,16 @@ export default function ArticleEditPage() {
                 </ToolbarBtn>
                 <ToolbarBtn onClick={insertVideoUrl} title={t('articles.insert_video')}>
                   <span style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>VDO</span>
+                </ToolbarBtn>
+                <ToolbarBtn
+                  onClick={() => videoInputRef.current?.click()}
+                  disabled={uploadingVideo}
+                  title={t('articles.upload_video')}
+                >
+                  {uploadingVideo
+                    ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                    : <span style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>↑VDO</span>
+                  }
                 </ToolbarBtn>
               </div>
             )}

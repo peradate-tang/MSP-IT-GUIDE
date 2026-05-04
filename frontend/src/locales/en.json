@@ -81,6 +81,7 @@
     "image_alt_prompt": "Enter alt text for the image",
     "insert_video": "Insert Video (YouTube / URL)",
     "video_url_prompt": "Enter video URL (YouTube or video file)",
+    "upload_video": "Upload video from device",
     "uploading": "Uploading...",
     "upload_error": "Image upload failed",
     "preview": "Preview",
