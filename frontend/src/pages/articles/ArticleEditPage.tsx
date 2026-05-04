@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
-import { Save, Eye, EyeOff, ArrowLeft, ImagePlus, Loader2 } from 'lucide-react';
+import { Save, Eye, EyeOff, ArrowLeft, ImagePlus, Loader2, Bold, Italic, Code, Link, List, Heading2, Image } from 'lucide-react';
 
 export default function ArticleEditPage() {
   const { t } = useTranslation();
@@ -90,6 +91,41 @@ export default function ArticleEditPage() {
     }, 0);
   };
 
+  const insertImageUrl = () => {
+    const url = window.prompt(t('articles.image_url_prompt'));
+    if (!url) return;
+    const alt = window.prompt(t('articles.image_alt_prompt')) || 'image';
+    insertAtCursor(`\n![${alt}](${url})\n`);
+  };
+
+  const insertVideoUrl = () => {
+    const url = window.prompt(t('articles.video_url_prompt'));
+    if (!url) return;
+    // YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+    if (ytMatch) {
+      insertAtCursor(`\n<iframe width="100%" height="400" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>\n`);
+      return;
+    }
+    // Direct video file
+    insertAtCursor(`\n<video controls width="100%"><source src="${url}" /></video>\n`);
+  };
+
+  const wrapSelection = (before: string, after: string, placeholder: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = form.content.slice(start, end) || placeholder;
+    const newContent = form.content.slice(0, start) + before + selected + after + form.content.slice(end);
+    setForm(f => ({ ...f, content: newContent }));
+    setTimeout(() => {
+      textarea.selectionStart = start + before.length;
+      textarea.selectionEnd = start + before.length + selected.length;
+      textarea.focus();
+    }, 0);
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -148,44 +184,47 @@ export default function ArticleEditPage() {
           <div className="form-group" style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <label className="form-label" style={{ margin: 0 }}>{preview ? t('articles.preview') : t('articles.content_label')}</label>
-              {!preview && (
-                <>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageUpload}
-                  />
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    title={t('articles.insert_image')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem' }}
-                  >
-                    {uploading
-                      ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> {t('articles.uploading')}</>
-                      : <><ImagePlus size={14} /> {t('articles.insert_image')}</>
-                    }
-                  </button>
-                </>
+            </div>
+            {!preview && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6, flexWrap: 'wrap', padding: '4px 8px', background: 'var(--bg-3)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+                <ToolbarBtn onClick={() => wrapSelection('**', '**', 'bold')} title="Bold"><Bold size={13} /></ToolbarBtn>
+                <ToolbarBtn onClick={() => wrapSelection('*', '*', 'italic')} title="Italic"><Italic size={13} /></ToolbarBtn>
+                <ToolbarBtn onClick={() => wrapSelection('`', '`', 'code')} title="Inline code"><Code size={13} /></ToolbarBtn>
+                <ToolbarSep />
+                <ToolbarBtn onClick={() => insertAtCursor('\n## Heading\n')} title="Heading"><Heading2 size={13} /></ToolbarBtn>
+                <ToolbarBtn onClick={() => insertAtCursor('\n- item\n')} title="List"><List size={13} /></ToolbarBtn>
+                <ToolbarBtn onClick={() => wrapSelection('[', '](url)', 'link text')} title="Link"><Link size={13} /></ToolbarBtn>
+                <ToolbarSep />
+                <ToolbarBtn onClick={insertImageUrl} title={t('articles.image_url_prompt')}><Image size={13} /></ToolbarBtn>
+                <ToolbarBtn
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  title={t('articles.insert_image')}
+                >
+                  {uploading ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <ImagePlus size={13} />}
+                </ToolbarBtn>
+                <ToolbarBtn onClick={insertVideoUrl} title={t('articles.insert_video')}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>VDO</span>
+                </ToolbarBtn>
+              </div>
+            )}
+            <div>
+              {preview ? (
+                <div className="card markdown-body" style={{ minHeight: 400, padding: 24 }}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{form.content || t('articles.no_content')}</ReactMarkdown>
+                </div>
+              ) : (
+                <textarea
+                  ref={textareaRef}
+                  className="input"
+                  style={{ minHeight: 480, fontFamily: 'var(--font-mono)', fontSize: '0.875rem', resize: 'vertical' }}
+                  placeholder={t('articles.content_placeholder')}
+                  value={form.content}
+                  onChange={set('content')}
+                />
               )}
             </div>
-            {preview ? (
-              <div className="card markdown-body" style={{ minHeight: 400, padding: 24 }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content || t('articles.no_content')}</ReactMarkdown>
-              </div>
-            ) : (
-              <textarea
-                ref={textareaRef}
-                className="input"
-                style={{ minHeight: 480, fontFamily: 'var(--font-mono)', fontSize: '0.875rem', resize: 'vertical' }}
-                placeholder={t('articles.content_placeholder')}
-                value={form.content}
-                onChange={set('content')}
-              />
-            )}
           </div>
         </div>
 
@@ -235,4 +274,29 @@ export default function ArticleEditPage() {
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
+}
+
+function ToolbarBtn({ onClick, title, disabled, children }: { onClick: () => void; title?: string; disabled?: boolean; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      style={{
+        background: 'none', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+        padding: '4px 6px', borderRadius: 4, color: 'var(--text-2)',
+        display: 'flex', alignItems: 'center', opacity: disabled ? 0.5 : 1,
+        transition: 'background 0.1s',
+      }}
+      onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.background = 'var(--bg-2)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ToolbarSep() {
+  return <div style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 2px' }} />;
 }
