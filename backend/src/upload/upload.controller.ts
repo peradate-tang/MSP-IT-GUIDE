@@ -33,4 +33,28 @@ export class UploadController {
     if (!file) throw new BadRequestException('No file uploaded');
     return { url: `/uploads/${file.filename}` };
   }
+
+  @Post('video')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (_, file, cb) => {
+          const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+          cb(null, `${unique}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (_, file, cb) => {
+        if (!file.mimetype.match(/^video\//)) {
+          return cb(new BadRequestException('Only video files are allowed'), false);
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
+    }),
+  )
+  uploadVideo(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    return { url: `/uploads/${file.filename}` };
+  }
 }
