@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
 import {
   BookOpen, Home, Users, Shield,
-  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2, Settings
+  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2, Settings, Globe
 } from 'lucide-react';
 import i18n from '../../lib/i18n';
 
@@ -23,13 +23,14 @@ function LangToggle() {
         background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 6,
         padding: '4px 10px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
         color: 'var(--text-2)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em',
-        transition: 'border-color 0.15s',
+        transition: 'border-color 0.15s', display: 'flex', alignItems: 'center', gap: 5,
       }}
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'}
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
       title="Switch language"
     >
-      {lang === 'th' ? '🇹🇭 TH' : '🇬🇧 EN'}
+      <Globe size={12} />
+      {lang === 'th' ? 'TH' : 'EN'}
     </button>
   );
 }
