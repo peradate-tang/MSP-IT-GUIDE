@@ -124,7 +124,9 @@ export default function RichEditor({
         .rich-editor-content pre code { background: none; padding: 0; }
         .rich-editor-content blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding-left: 1em; color: var(--text-2); }
         .rich-editor-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5em 0; }
-        .rich-editor-content img { max-width: 100%; border-radius: var(--radius); margin: 0.5em 0; }
+        .rich-editor-content img { max-width: 100%; height: auto; border-radius: var(--radius); margin: 0.5em 0; display: block; }
+        .rich-editor-content video { max-width: 100%; height: auto; border-radius: var(--radius); margin: 0.5em 0; display: block; }
+        .rich-editor-content iframe { max-width: 100%; border-radius: var(--radius); margin: 0.5em 0; display: block; }
         .rich-editor-content a { color: var(--accent); }
         .rich-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--text-3); pointer-events: none; float: left; height: 0; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

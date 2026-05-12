@@ -44,7 +44,9 @@ export class UploadController {
       folder: 'msp-it-guide/images',
       resource_type: 'image',
     });
-    return { url: result.secure_url };
+    // จำกัดความกว้างสูงสุด 1200px, คุณภาพ auto, format auto (webp/avif)
+    const url = result.secure_url.replace('/upload/', '/upload/w_1200,c_limit,q_auto,f_auto/');
+    return { url };
   }
 
   @Post('video')
@@ -65,7 +67,12 @@ export class UploadController {
     const result = await uploadToCloudinary(file.buffer, {
       folder: 'msp-it-guide/videos',
       resource_type: 'video',
+      // ลดความละเอียดเป็น 720p และ compress ก่อนเก็บ
+      eager: [{ width: 1280, height: 720, crop: 'limit', quality: 70, format: 'mp4' }],
+      eager_async: false,
     });
-    return { url: result.secure_url };
+    // ใช้ eager URL ที่ถูก transcode แล้ว ถ้ามี ไม่งั้นใช้ original
+    const url = result.eager?.[0]?.secure_url ?? result.secure_url;
+    return { url };
   }
 }

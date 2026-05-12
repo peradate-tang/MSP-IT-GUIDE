@@ -188,6 +188,9 @@ select.input { cursor: pointer; }
 .markdown-body table th { background: var(--bg-3); }
 .markdown-body a { color: var(--accent); }
 .markdown-body hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+.markdown-body img { max-width: 100%; height: auto; border-radius: var(--radius); display: block; margin: 0.5em 0; }
+.markdown-body video { max-width: 100%; height: auto; border-radius: var(--radius); display: block; margin: 0.5em 0; }
+.markdown-body iframe { max-width: 100%; border-radius: var(--radius); display: block; margin: 0.5em 0; }
 
 /* Alert */
 .alert { padding: 12px 16px; border-radius: var(--radius); font-size: 0.875rem; }
