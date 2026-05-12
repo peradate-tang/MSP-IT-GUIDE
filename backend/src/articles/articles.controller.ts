@@ -1,25 +1,30 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, Optional } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { RequireRole } from '../common/decorators/roles.decorator';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 
 @Controller('articles')
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   findAll(
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
     @Query('status') status?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Request() req?: any,
   ) {
+    const user = req?.user;
+    const canSeeAll = user && (user.role === 'admin' || user.role === 'editor');
     return this.articlesService.findAll({
       search,
       categoryId: categoryId ? +categoryId : undefined,
-      status,
+      status: canSeeAll ? status : 'published',
       page: page ? +page : 1,
       limit: limit ? +limit : 10,
     });

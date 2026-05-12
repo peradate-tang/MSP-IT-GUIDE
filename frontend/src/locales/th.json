@@ -27,7 +27,9 @@
     "admin_users": "ผู้ใช้งาน",
     "admin_roles": "Role & สิทธิ์",
     "admin_report": "รายงาน",
-    "logout": "ออกจากระบบ"
+    "logout": "ออกจากระบบ",
+    "login": "เข้าสู่ระบบ",
+    "guest_hint": "เข้าสู่ระบบเพื่อเพิ่ม/แก้ไขบทความ"
   },
   "login": {
     "title": "IT Guide",

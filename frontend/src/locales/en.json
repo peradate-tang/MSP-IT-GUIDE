@@ -27,7 +27,9 @@
     "admin_users": "Users",
     "admin_roles": "Roles & Permissions",
     "admin_report": "Reports",
-    "logout": "Log out"
+    "logout": "Log out",
+    "login": "Sign in",
+    "guest_hint": "Sign in to add or edit articles"
   },
   "login": {
     "title": "IT Guide",
