@@ -1,8 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { useAuthStore } from '../../lib/authStore';
@@ -82,9 +79,7 @@ export default function ArticleViewPage() {
       <div style={{ borderTop: '1px solid var(--border)', marginBottom: 32 }} />
 
       {/* Content */}
-      <div className="markdown-body">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{article.content}</ReactMarkdown>
-      </div>
+      <div className="markdown-body" dangerouslySetInnerHTML={{ __html: article.content }} />
 
       {/* Footer */}
       <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
