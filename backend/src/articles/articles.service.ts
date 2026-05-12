@@ -2,6 +2,42 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Article, ArticleStatus } from './article.entity';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Extract Cloudinary public_id and resource_type from a URL
+function parseCloudinaryUrl(url: string): { publicId: string; resourceType: string } | null {
+  const match = url.match(/https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\/(?:[^/]+\/)*msp-it-guide\/(\w+)\//);
+  if (!match) return null;
+  const resourceType = match[1];
+  // Extract public_id: everything after /upload/[optional-transforms]/ until end, strip extension
+  const afterUpload = url.replace(/^.*\/upload\//, '');
+  // Remove transformation segments (they contain commas or known transform keywords)
+  const parts = afterUpload.split('/');
+  const publicParts = parts.filter(p => !p.includes(',') && !p.match(/^[a-z]_/));
+  const publicIdWithExt = publicParts.join('/');
+  const publicId = publicIdWithExt.replace(/\.[^.]+$/, '');
+  return { publicId, resourceType };
+}
+
+async function deleteCloudinaryAssets(htmlContent: string): Promise<void> {
+  try {
+    const urlRegex = /https?:\/\/res\.cloudinary\.com\/[^\s"'<>)]+/g;
+    const urls = htmlContent.match(urlRegex) || [];
+    const seen = new Set<string>();
+    for (const url of urls) {
+      const parsed = parseCloudinaryUrl(url);
+      if (!parsed || seen.has(parsed.publicId)) continue;
+      seen.add(parsed.publicId);
+      await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType as any }).catch(() => {});
+    }
+  } catch {}
+}
 
 function toSlug(title: string): string {
   return title
@@ -139,7 +175,8 @@ export class ArticlesService {
   }
 
   async remove(id: number): Promise<void> {
-    await this.findOne(id);
+    const article = await this.findOne(id);
     await this.articlesRepository.delete(id);
+    await deleteCloudinaryAssets(article.content || '');
   }
 }
