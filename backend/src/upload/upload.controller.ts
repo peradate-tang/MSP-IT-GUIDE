@@ -3,9 +3,24 @@ import {
   UseGuards, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+function uploadToCloudinary(buffer: Buffer, options: object): Promise<any> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    }).end(buffer);
+  });
+}
 
 @Controller('upload')
 @UseGuards(JwtAuthGuard)
@@ -13,37 +28,29 @@ export class UploadController {
   @Post('image')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (_, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_, file, cb) => {
         if (!file.mimetype.match(/^image\//)) {
           return cb(new BadRequestException('Only image files are allowed'), false);
         }
         cb(null, true);
       },
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     }),
   )
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
-    return { url: `/uploads/${file.filename}` };
+    const result = await uploadToCloudinary(file.buffer, {
+      folder: 'msp-it-guide/images',
+      resource_type: 'image',
+    });
+    return { url: result.secure_url };
   }
 
   @Post('video')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (_, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_, file, cb) => {
         if (!file.mimetype.match(/^video\//)) {
           return cb(new BadRequestException('Only video files are allowed'), false);
@@ -53,8 +60,12 @@ export class UploadController {
       limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
     }),
   )
-  uploadVideo(@UploadedFile() file: Express.Multer.File) {
+  async uploadVideo(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
-    return { url: `/uploads/${file.filename}` };
+    const result = await uploadToCloudinary(file.buffer, {
+      folder: 'msp-it-guide/videos',
+      resource_type: 'video',
+    });
+    return { url: result.secure_url };
   }
 }

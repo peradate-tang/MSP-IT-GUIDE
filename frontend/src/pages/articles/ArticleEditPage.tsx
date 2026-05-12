@@ -140,8 +140,8 @@ export default function ArticleEditPage() {
       const { data } = await api.post('/upload/video', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const baseUrl = BASE_URL;
-      insertAtCursor(`\n<video controls width="100%"><source src="${baseUrl}${data.url}" type="${file.type}" /></video>\n`);
+      const videoUrl = data.url.startsWith('http') ? data.url : `${BASE_URL}${data.url}`;
+      insertAtCursor(`\n<video controls width="100%"><source src="${videoUrl}" type="${file.type}" /></video>\n`);
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
     } finally {
@@ -161,8 +161,8 @@ export default function ArticleEditPage() {
       const { data } = await api.post('/upload/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const baseUrl = BASE_URL;
-      insertAtCursor(`\n![${file.name}](${baseUrl}${data.url})\n`);
+      const imageUrl = data.url.startsWith('http') ? data.url : `${BASE_URL}${data.url}`;
+      insertAtCursor(`\n![${file.name}](${imageUrl})\n`);
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
     } finally {
