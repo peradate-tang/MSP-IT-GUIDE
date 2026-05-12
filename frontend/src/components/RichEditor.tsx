@@ -36,7 +36,7 @@ export default function RichEditor({
       Underline,
       Image.configure({ inline: false, allowBase64: false }),
       Link.configure({ openOnClick: false }),
-      Youtube.configure({ width: '100%', height: 400 }),
+      Youtube.configure({ width: 640, height: 400 }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder: placeholder || 'เขียนเนื้อหาที่นี่...' }),
     ],
@@ -52,7 +52,7 @@ export default function RichEditor({
   useEffect(() => {
     if (!editor) return;
     if (editor.getHTML() !== content) {
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content);
     }
   }, [content]);
 
