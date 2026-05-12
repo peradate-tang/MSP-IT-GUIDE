@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import {
   Bold, Italic, UnderlineIcon, Strikethrough, Code, Heading1, Heading2, Heading3,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon,
-  Image as ImageIcon, ImagePlus, Loader2, Minus, Undo, Redo,
+  Image as ImageIcon, ImagePlus, Loader2, Minus, Undo, Redo, Paperclip,
 } from 'lucide-react';
 
 interface Props {
@@ -19,16 +19,18 @@ interface Props {
   placeholder?: string;
   uploading?: boolean;
   uploadingVideo?: boolean;
+  uploadingFile?: boolean;
   onImageUpload?: () => void;
   onVideoUpload?: () => void;
   onImageUrl?: () => void;
   onVideoUrl?: () => void;
+  onFileUpload?: () => void;
 }
 
 export default function RichEditor({
   content, onChange, placeholder,
-  uploading, uploadingVideo,
-  onImageUpload, onVideoUpload, onImageUrl, onVideoUrl,
+  uploading, uploadingVideo, uploadingFile,
+  onImageUpload, onVideoUpload, onImageUrl, onVideoUrl, onFileUpload,
 }: Props) {
   const editor = useEditor({
     extensions: [
@@ -104,6 +106,13 @@ export default function RichEditor({
           {uploadingVideo
             ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
             : <span style={{ fontSize: '0.65rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>↑VDO</span>
+          }
+        </TB>
+        <Sep />
+        <TB onClick={onFileUpload} disabled={uploadingFile} title="แนบไฟล์ (PDF, Word, Excel ฯลฯ สูงสุด 20MB)">
+          {uploadingFile
+            ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
+            : <Paperclip size={13} />
           }
         </TB>
       </div>
