@@ -67,12 +67,29 @@ export class UploadController {
     const result = await uploadToCloudinary(file.buffer, {
       folder: 'msp-it-guide/videos',
       resource_type: 'video',
-      // ลดความละเอียดเป็น 720p และ compress ก่อนเก็บ
       eager: [{ width: 1280, height: 720, crop: 'limit', quality: 70, format: 'mp4' }],
       eager_async: false,
     });
-    // ใช้ eager URL ที่ถูก transcode แล้ว ถ้ามี ไม่งั้นใช้ original
     const url = result.eager?.[0]?.secure_url ?? result.secure_url;
     return { url };
+  }
+
+  @Post('file')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+    }),
+  )
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const result = await uploadToCloudinary(file.buffer, {
+      folder: 'msp-it-guide/files',
+      resource_type: 'raw',
+      public_id: `${Date.now()}-${file.originalname}`,
+      use_filename: true,
+      unique_filename: false,
+    });
+    return { url: result.secure_url, name: file.originalname, size: file.size };
   }
 }

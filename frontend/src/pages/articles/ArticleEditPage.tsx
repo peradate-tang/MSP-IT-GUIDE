@@ -15,9 +15,10 @@ export default function ArticleEditPage() {
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<{ insertImage: (url: string, alt: string) => void; insertVideo: (url: string) => void } | null>(null);
+  const attachInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -114,6 +115,30 @@ export default function ArticleEditPage() {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/upload/file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const sizeKB = Math.round(data.size / 1024);
+      const sizeLabel = sizeKB >= 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`;
+      setForm(f => ({
+        ...f,
+        content: f.content + `<p><a href="${data.url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;text-decoration:none;color:var(--text);font-size:0.875rem;">📎 ${data.name} <span style="color:var(--text-3);font-size:0.75rem;">(${sizeLabel})</span></a></p>`,
+      }));
+    } catch (err: any) {
+      setError(err?.response?.data?.message || t('articles.upload_error'));
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const handleImageUrl = () => {
     const url = window.prompt(t('articles.image_url_prompt'));
     if (!url) return;
@@ -178,14 +203,17 @@ export default function ArticleEditPage() {
             <label className="form-label" style={{ marginBottom: 6 }}>{t('articles.content_label')}</label>
             <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
             <input ref={videoInputRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={handleVideoUpload} />
+            <input ref={attachInputRef} type="file" style={{ display: 'none' }} onChange={handleFileUpload} />
             <RichEditor
               content={form.content}
               onChange={(html) => setForm(f => ({ ...f, content: html }))}
               placeholder={t('articles.content_placeholder')}
               uploading={uploading}
               uploadingVideo={uploadingVideo}
+              uploadingFile={uploadingFile}
               onImageUpload={() => fileInputRef.current?.click()}
               onVideoUpload={() => videoInputRef.current?.click()}
+              onFileUpload={() => attachInputRef.current?.click()}
               onImageUrl={handleImageUrl}
               onVideoUrl={handleVideoUrl}
             />
