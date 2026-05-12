@@ -1,12 +1,12 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
+import ResizableImage from './ResizableImage';
 import Link from '@tiptap/extension-link';
 import Youtube from '@tiptap/extension-youtube';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
-import { useEffect } from 'react';
+import { useEffect, useImperativeHandle, forwardRef } from 'react';
 import {
   Bold, Italic, UnderlineIcon, Strikethrough, Code, Heading1, Heading2, Heading3,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon,
@@ -27,16 +27,20 @@ interface Props {
   onFileUpload?: () => void;
 }
 
-export default function RichEditor({
+export interface RichEditorHandle {
+  insertContent: (html: string) => void;
+}
+
+const RichEditor = forwardRef<RichEditorHandle, Props>(function RichEditor({
   content, onChange, placeholder,
   uploading, uploadingVideo, uploadingFile,
   onImageUpload, onVideoUpload, onImageUrl, onVideoUrl, onFileUpload,
-}: Props) {
+}, ref) {
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
-      Image.configure({ inline: false, allowBase64: false }),
+      ResizableImage,
       Link.configure({ openOnClick: false }),
       Youtube.configure({ width: 640, height: 400 }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -57,6 +61,12 @@ export default function RichEditor({
       editor.commands.setContent(content);
     }
   }, [content]);
+
+  useImperativeHandle(ref, () => ({
+    insertContent: (html: string) => {
+      editor?.chain().focus().insertContent(html).run();
+    },
+  }));
 
   if (!editor) return null;
 
@@ -142,7 +152,9 @@ export default function RichEditor({
       `}</style>
     </div>
   );
-}
+});
+
+export default RichEditor;
 
 function TB({ onClick, title, active, disabled, children }: {
   onClick?: () => void; title?: string; active?: boolean; disabled?: boolean; children: React.ReactNode;

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api, { BASE_URL } from '../../lib/api';
 import { Save, ArrowLeft } from 'lucide-react';
-import RichEditor from '../../components/RichEditor';
+import RichEditor, { RichEditorHandle } from '../../components/RichEditor';
 
 export default function ArticleEditPage() {
   const { t } = useTranslation();
@@ -19,6 +19,7 @@ export default function ArticleEditPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<RichEditorHandle>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -87,7 +88,7 @@ export default function ArticleEditPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const url = data.url.startsWith('http') ? data.url : `${BASE_URL}${data.url}`;
-      setForm(f => ({ ...f, content: f.content + `<img src="${url}" alt="${file.name}" />` }));
+      editorRef.current?.insertContent(`<img src="${url}" alt="${file.name}" />`);
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
     } finally {
@@ -107,7 +108,7 @@ export default function ArticleEditPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const url = data.url.startsWith('http') ? data.url : `${BASE_URL}${data.url}`;
-      setForm(f => ({ ...f, content: f.content + `<video controls style="width:100%"><source src="${url}" type="${file.type}" /></video>` }));
+      editorRef.current?.insertContent(`<video controls style="width:100%;border-radius:6px"><source src="${url}" type="${file.type}" /></video>`);
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
     } finally {
@@ -128,10 +129,9 @@ export default function ArticleEditPage() {
       });
       const sizeKB = Math.round(data.size / 1024);
       const sizeLabel = sizeKB >= 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`;
-      setForm(f => ({
-        ...f,
-        content: f.content + `<p><a href="${data.url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;text-decoration:none;color:var(--text);font-size:0.875rem;">📎 ${data.name} <span style="color:var(--text-3);font-size:0.75rem;">(${sizeLabel})</span></a></p>`,
-      }));
+      editorRef.current?.insertContent(
+        `<p><a href="${data.url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;text-decoration:none;color:var(--text);font-size:0.875rem;">📎 ${data.name} <span style="color:var(--text-3);font-size:0.75rem;">(${sizeLabel})</span></a></p>`
+      );
     } catch (err: any) {
       setError(err?.response?.data?.message || t('articles.upload_error'));
     } finally {
@@ -143,7 +143,7 @@ export default function ArticleEditPage() {
     const url = window.prompt(t('articles.image_url_prompt'));
     if (!url) return;
     const alt = window.prompt(t('articles.image_alt_prompt')) || 'image';
-    setForm(f => ({ ...f, content: f.content + `<img src="${url}" alt="${alt}" />` }));
+    editorRef.current?.insertContent(`<img src="${url}" alt="${alt}" />`);
   };
 
   const handleVideoUrl = () => {
@@ -151,9 +151,9 @@ export default function ArticleEditPage() {
     if (!url) return;
     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
     if (ytMatch) {
-      setForm(f => ({ ...f, content: f.content + `<iframe width="100%" height="400" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>` }));
+      editorRef.current?.insertContent(`<iframe width="100%" height="400" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>`);
     } else {
-      setForm(f => ({ ...f, content: f.content + `<video controls style="width:100%"><source src="${url}" /></video>` }));
+      editorRef.current?.insertContent(`<video controls style="width:100%;border-radius:6px"><source src="${url}" /></video>`);
     }
   };
 
@@ -205,6 +205,7 @@ export default function ArticleEditPage() {
             <input ref={videoInputRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={handleVideoUpload} />
             <input ref={attachInputRef} type="file" style={{ display: 'none' }} onChange={handleFileUpload} />
             <RichEditor
+              ref={editorRef}
               content={form.content}
               onChange={(html) => setForm(f => ({ ...f, content: html }))}
               placeholder={t('articles.content_placeholder')}
