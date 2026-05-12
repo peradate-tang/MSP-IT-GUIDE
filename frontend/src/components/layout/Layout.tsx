@@ -139,7 +139,14 @@ export default function Layout() {
               </button>
             </div>
           ) : (
-            <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>{t('login.submit')}</Link>
+            <div style={{ padding: '4px 0' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginBottom: 8, textAlign: 'center' }}>
+                {t('nav.guest_hint')}
+              </p>
+              <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                <LogOut size={14} style={{ transform: 'rotate(180deg)' }} /> {t('nav.login')}
+              </Link>
+            </div>
           )}
         </div>
       </aside>
