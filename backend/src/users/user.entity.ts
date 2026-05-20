@@ -21,6 +21,9 @@ export class User {
   @Column({ nullable: true })
   fullName: string;
 
+  @Column({ nullable: true })
+  department: string;
+
   @Column({ default: true })
   isActive: boolean;
 

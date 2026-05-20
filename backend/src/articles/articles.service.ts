@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Article, ArticleStatus } from './article.entity';
@@ -123,12 +123,16 @@ export class ArticlesService {
     status?: string;
     page?: number;
     limit?: number;
+    userRole?: string;
+    userDepartment?: string;
   }) {
-    const { search, categoryId, status, page = 1, limit = 10 } = query;
+    const { search, categoryId, status, page = 1, limit = 10, userRole, userDepartment } = query;
     const where: any = {};
     if (search) where.title = Like(`%${search}%`);
     if (categoryId) where.categoryId = categoryId;
     if (status) where.status = status;
+    // Editor เห็นเฉพาะบทความของแผนกตัวเอง
+    if (userRole === 'editor' && userDepartment) where.department = userDepartment;
 
     const [data, total] = await this.articlesRepository.findAndCount({
       where,
@@ -155,18 +159,24 @@ export class ArticlesService {
   async create(
     data: Partial<Article> & { title: string; content: string },
     authorId: number,
+    userDepartment?: string,
   ): Promise<Article> {
     const slug = data.slug || toSlug(data.title) + '-' + Date.now();
     const entity = this.articlesRepository.create({
       ...data,
       slug,
       authorId,
+      department: userDepartment || null,
     } as any);
     return this.articlesRepository.save(entity) as unknown as Article;
   }
 
-  async update(id: number, data: Partial<Article>): Promise<Article> {
-    await this.findOne(id);
+  async update(id: number, data: Partial<Article>, user?: { role: string; department: string }): Promise<Article> {
+    const article = await this.findOne(id);
+    // Editor ต้องอยู่แผนกเดียวกับบทความ
+    if (user?.role === 'editor' && article.department && article.department !== user.department) {
+      throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขบทความของแผนกอื่น');
+    }
     if (data.title && !data.slug) {
       data.slug = toSlug(data.title) + '-' + id;
     }

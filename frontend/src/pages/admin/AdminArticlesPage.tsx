@@ -39,6 +39,7 @@ export default function AdminArticlesPage() {
             <tr>
               <th>{t('admin.articles.col_title')}</th>
               <th>{t('admin.articles.col_category')}</th>
+              <th>แผนก</th>
               <th>{t('admin.articles.col_status')}</th>
               <th>{t('articles.views')}</th>
               <th>{t('admin.articles.col_date')}</th>
@@ -47,9 +48,9 @@ export default function AdminArticlesPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
             ) : data?.data?.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>{t('common.noData')}</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-3)' }}>{t('common.noData')}</td></tr>
             ) : data?.data?.map((a: any) => (
               <tr key={a.id}>
                 <td style={{ maxWidth: 280 }}>
@@ -57,6 +58,7 @@ export default function AdminArticlesPage() {
                   {a.tags?.length > 0 && <div style={{ marginTop: 4, display: 'flex', gap: 4 }}>{a.tags.slice(0, 2).map((tag: string) => <span key={tag} className="tag">#{tag}</span>)}</div>}
                 </td>
                 <td><span style={{ fontSize: '0.8rem' }}>{a.category?.icon} {a.category?.name || '—'}</span></td>
+                <td style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>{a.department || '—'}</td>
                 <td><span className={`badge badge-${a.status}`}>{a.status}</span></td>
                 <td style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>{a.viewCount}</td>
                 <td style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>{new Date(a.createdAt).toLocaleDateString('th-TH')}</td>

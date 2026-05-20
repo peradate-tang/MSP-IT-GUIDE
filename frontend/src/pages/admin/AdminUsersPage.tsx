@@ -12,6 +12,7 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
     username: user?.username || '',
     email: user?.email || '',
     fullName: user?.fullName || '',
+    department: user?.department || '',
     password: '',
     roleId: user?.role?.id || '',
     isActive: user?.isActive ?? true,
@@ -55,6 +56,10 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
           <div className="form-group">
             <label className="form-label">{t('admin.users.password_label')} {!isNew && <span style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>{t('admin.users.password_hint')}</span>}</label>
             <input className="input" type="password" value={form.password} onChange={set('password')} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">แผนก (Department)</label>
+            <input className="input" placeholder="เช่น IT, HR, Finance" value={form.department} onChange={set('department')} />
           </div>
           <div className="form-group">
             <label className="form-label">{t('admin.users.role_label')}</label>
@@ -107,6 +112,7 @@ export default function AdminUsersPage() {
             <tr>
               <th>{t('admin.users.col_username')}</th>
               <th>{t('admin.users.col_email')}</th>
+              <th>แผนก</th>
               <th>{t('admin.users.col_role')}</th>
               <th>{t('common.status')}</th>
               <th>สร้างเมื่อ</th>
@@ -115,7 +121,7 @@ export default function AdminUsersPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
             ) : users?.map((u: any) => (
               <tr key={u.id}>
                 <td>
@@ -132,6 +138,7 @@ export default function AdminUsersPage() {
                   </div>
                 </td>
                 <td style={{ fontSize: '0.875rem', color: 'var(--text-2)' }}>{u.email}</td>
+                <td style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>{u.department || '—'}</td>
                 <td><span className={`badge badge-${u.role?.name}`}>{u.role?.name || '—'}</span></td>
                 <td>
                   <span style={{

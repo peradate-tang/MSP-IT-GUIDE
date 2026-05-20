@@ -20,13 +20,16 @@ export class ArticlesController {
     @Request() req?: any,
   ) {
     const user = req?.user;
-    const canSeeAll = user && (user.role === 'admin' || user.role === 'editor');
+    const isAdmin = user?.role === 'admin';
+    const isEditor = user?.role === 'editor';
     return this.articlesService.findAll({
       search,
       categoryId: categoryId ? +categoryId : undefined,
-      status: canSeeAll ? status : 'published',
+      status: (isAdmin || isEditor) ? status : 'published',
       page: page ? +page : 1,
       limit: limit ? +limit : 10,
+      userRole: user?.role,
+      userDepartment: user?.department,
     });
   }
 
@@ -44,14 +47,14 @@ export class ArticlesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'editor')
   create(@Body() body: any, @Request() req) {
-    return this.articlesService.create(body, req.user.sub);
+    return this.articlesService.create(body, req.user.sub, req.user.department);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'editor')
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.articlesService.update(+id, body);
+  update(@Param('id') id: string, @Body() body: any, @Request() req) {
+    return this.articlesService.update(+id, body, { role: req.user.role, department: req.user.department });
   }
 
   @Delete(':id')

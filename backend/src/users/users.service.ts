@@ -34,7 +34,7 @@ export class UsersService implements OnModuleInit {
   }
 
   findAll(): Promise<User[]> {
-    return this.usersRepository.find({ select: ['id', 'username', 'email', 'fullName', 'isActive', 'createdAt', 'roleId', 'role'] });
+    return this.usersRepository.find({ select: ['id', 'username', 'email', 'fullName', 'department', 'isActive', 'createdAt', 'roleId', 'role'] });
   }
 
   async findOne(id: number): Promise<User> {
@@ -56,6 +56,7 @@ export class UsersService implements OnModuleInit {
     email: string;
     password: string;
     fullName?: string;
+    department?: string;
     roleId?: number;
   }): Promise<User> {
     const exists = await this.usersRepository.findOne({ where: [{ username: data.username }, { email: data.email }] });
@@ -66,7 +67,7 @@ export class UsersService implements OnModuleInit {
     return this.usersRepository.save(user);
   }
 
-  async update(id: number, data: Partial<{ fullName: string; email: string; isActive: boolean; roleId: number; password: string }>): Promise<User> {
+  async update(id: number, data: Partial<{ fullName: string; email: string; department: string; isActive: boolean; roleId: number; password: string }>): Promise<User> {
     await this.findOne(id);
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
