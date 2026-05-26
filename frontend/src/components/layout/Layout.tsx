@@ -42,8 +42,8 @@ export default function Layout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
-  const isAdmin = user?.role?.name === 'admin';
-  const isEditor = user?.role?.name === 'editor' || isAdmin;
+  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
+  const isEditor = isAdmin || user?.role?.name === 'editor' || user?.role?.permissions?.includes('articles:write');
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

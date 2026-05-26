@@ -16,7 +16,17 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
     if (!user) throw new ForbiddenException('Access denied');
 
+    // admin always passes
+    if (user.role === 'admin') return true;
+
+    // wildcard permission
+    if (user.permissions?.includes('*')) return true;
+
+    // role name match (built-in roles like 'editor')
     if (requiredRoles.includes(user.role)) return true;
+
+    // permission match (custom roles with specific permissions)
+    if (user.permissions?.some((p: string) => requiredRoles.includes(p))) return true;
 
     throw new ForbiddenException('Insufficient permissions');
   }
