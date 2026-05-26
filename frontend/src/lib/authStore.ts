@@ -7,7 +7,7 @@ interface User {
   email: string;
   fullName: string;
   department?: string;
-  role: { id: number; name: string; permissions: string[] };
+  role: { id: number; name: string; permissions: string[]; allowedCategories?: number[] };
 }
 
 interface AuthState {

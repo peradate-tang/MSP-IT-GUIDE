@@ -5,9 +5,11 @@ import { useTranslation } from 'react-i18next';
 import api, { BASE_URL } from '../../lib/api';
 import { Save, ArrowLeft } from 'lucide-react';
 import RichEditor, { RichEditorHandle } from '../../components/RichEditor';
+import { useAuthStore } from '../../lib/authStore';
 
 export default function ArticleEditPage() {
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -30,10 +32,16 @@ export default function ArticleEditPage() {
     tags: '',
   });
 
-  const { data: categories } = useQuery({
+  const { data: allCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.get('/categories').then(r => r.data),
   });
+
+  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
+  const allowedCatIds: number[] = user?.role?.allowedCategories || [];
+  const categories = isAdmin || allowedCatIds.length === 0
+    ? allCategories
+    : (allCategories as any[] | undefined)?.filter((c: any) => allowedCatIds.includes(c.id));
 
   const { data: existing } = useQuery({
     queryKey: ['article-edit', id],
