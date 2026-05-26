@@ -30,7 +30,7 @@ export class ArticlesController {
       limit: limit ? +limit : 10,
       userRole: user?.role,
       userDepartment: user?.department,
-      allowedDepartments: user?.allowedDepartments,
+      allowedCategories: user?.allowedCategories,
     });
   }
 
@@ -55,7 +55,7 @@ export class ArticlesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'editor')
   update(@Param('id') id: string, @Body() body: any, @Request() req) {
-    return this.articlesService.update(+id, body, { role: req.user.role, department: req.user.department, allowedDepartments: req.user.allowedDepartments });
+    return this.articlesService.update(+id, body, { role: req.user.role, department: req.user.department, allowedCategories: req.user.allowedCategories });
   }
 
   @Delete(':id')

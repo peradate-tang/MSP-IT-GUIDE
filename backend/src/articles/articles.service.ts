@@ -125,20 +125,17 @@ export class ArticlesService {
     limit?: number;
     userRole?: string;
     userDepartment?: string;
-    allowedDepartments?: string[];
+    allowedCategories?: number[];
   }) {
-    const { search, categoryId, status, page = 1, limit = 10, userRole, userDepartment, allowedDepartments } = query;
+    const { search, categoryId, status, page = 1, limit = 10, userRole, userDepartment, allowedCategories } = query;
     const where: any = {};
     if (search) where.title = Like(`%${search}%`);
-    if (categoryId) where.categoryId = categoryId;
     if (status) where.status = status;
-    // Editor เห็นเฉพาะบทความของแผนกที่ได้รับอนุญาต
-    if (userRole === 'editor') {
-      if (allowedDepartments && allowedDepartments.length > 0) {
-        where.department = In(allowedDepartments);
-      } else if (userDepartment) {
-        where.department = userDepartment;
-      }
+    // Editor เห็นเฉพาะบทความของหมวดหมู่ที่ได้รับอนุญาต
+    if (userRole === 'editor' && allowedCategories && allowedCategories.length > 0) {
+      where.categoryId = categoryId ? categoryId : In(allowedCategories);
+    } else {
+      if (categoryId) where.categoryId = categoryId;
     }
 
     const [data, total] = await this.articlesRepository.findAndCount({
@@ -178,15 +175,12 @@ export class ArticlesService {
     return this.articlesRepository.save(entity) as unknown as Article;
   }
 
-  async update(id: number, data: Partial<Article>, user?: { role: string; department: string; allowedDepartments?: string[] }): Promise<Article> {
+  async update(id: number, data: Partial<Article>, user?: { role: string; department: string; allowedCategories?: number[] }): Promise<Article> {
     const article = await this.findOne(id);
-    // Editor ต้องอยู่แผนกที่ได้รับอนุญาต
-    if (user?.role === 'editor' && article.department) {
-      const allowed = user.allowedDepartments && user.allowedDepartments.length > 0
-        ? user.allowedDepartments
-        : user.department ? [user.department] : [];
-      if (allowed.length > 0 && !allowed.includes(article.department)) {
-        throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขบทความของแผนกอื่น');
+    // Editor ต้องอยู่ในหมวดหมู่ที่ได้รับอนุญาต
+    if (user?.role === 'editor' && user.allowedCategories && user.allowedCategories.length > 0 && article.categoryId) {
+      if (!user.allowedCategories.includes(article.categoryId)) {
+        throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขบทความในหมวดหมู่นี้');
       }
     }
     if (data.title && !data.slug) {

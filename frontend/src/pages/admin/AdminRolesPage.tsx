@@ -14,13 +14,13 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
     name: role?.name || '',
     description: role?.description || '',
     permissions: role?.permissions || [],
-    allowedDepartments: role?.allowedDepartments || [],
+    allowedCategories: role?.allowedCategories || [],
   });
   const [error, setError] = useState('');
 
-  const { data: departments = [] } = useQuery<string[]>({
-    queryKey: ['user-departments'],
-    queryFn: () => api.get('/users/departments').then(r => r.data),
+  const { data: categories = [] } = useQuery<any[]>({
+    queryKey: ['categories'],
+    queryFn: () => api.get('/categories').then(r => r.data),
   });
 
   const mutation = useMutation({
@@ -34,11 +34,11 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
     permissions: f.permissions.includes(p) ? f.permissions.filter((x: string) => x !== p) : [...f.permissions, p],
   }));
 
-  const toggleDept = (d: string) => setForm(f => ({
+  const toggleCat = (id: number) => setForm(f => ({
     ...f,
-    allowedDepartments: f.allowedDepartments.includes(d)
-      ? f.allowedDepartments.filter((x: string) => x !== d)
-      : [...f.allowedDepartments, d],
+    allowedCategories: f.allowedCategories.includes(id)
+      ? f.allowedCategories.filter((x: number) => x !== id)
+      : [...f.allowedCategories, id],
   }));
 
   return (
@@ -82,22 +82,22 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
             borderRadius: 8,
             padding: '12px 14px',
           }}>
-            <label className="form-label" style={{ marginBottom: 4 }}>แผนกที่ดูแลได้</label>
+            <label className="form-label" style={{ marginBottom: 4 }}>หมวดหมู่ที่แก้ไขได้</label>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-2)', marginBottom: 10 }}>
-              ถ้าไม่เลือก = ใช้แผนกของตัวเอง
+              ถ้าไม่เลือก = แก้ไขได้ทุกหมวดหมู่
             </p>
-            {departments.length === 0 ? (
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>ไม่พบข้อมูลแผนก</span>
+            {categories.length === 0 ? (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>ไม่พบข้อมูลหมวดหมู่</span>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {departments.map((d: string) => (
-                  <label key={d} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
+                {categories.map((c: any) => (
+                  <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
-                      checked={form.allowedDepartments.includes(d)}
-                      onChange={() => toggleDept(d)}
+                      checked={form.allowedCategories.includes(c.id)}
+                      onChange={() => toggleCat(c.id)}
                     />
-                    <span style={{ color: 'var(--text-1)' }}>{d}</span>
+                    <span style={{ color: 'var(--text-1)' }}>{c.icon} {c.name}</span>
                   </label>
                 ))}
               </div>
@@ -121,6 +121,8 @@ export default function AdminRolesPage() {
   const [modal, setModal] = useState<any>(null);
 
   const { data: roles, isLoading } = useQuery({ queryKey: ['roles'], queryFn: () => api.get('/roles').then(r => r.data) });
+  const { data: categories = [] } = useQuery<any[]>({ queryKey: ['categories'], queryFn: () => api.get('/categories').then(r => r.data) });
+  const catMap = Object.fromEntries((categories as any[]).map((c: any) => [c.id, c]));
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/roles/${id}`),
@@ -157,16 +159,17 @@ export default function AdminRolesPage() {
                       }}>{p}</code>
                     ))}
                   </div>
-                  {r.allowedDepartments && r.allowedDepartments.length > 0 && (
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-                      {r.allowedDepartments.map((d: string) => (
-                        <span key={d} style={{
+                  {r.allowedCategories && r.allowedCategories.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>หมวดหมู่:</span>
+                      {r.allowedCategories.map((id: number) => (
+                        <span key={id} style={{
                           fontSize: '0.72rem', padding: '2px 8px',
                           background: 'rgba(99,102,241,0.15)',
                           color: 'rgb(129,140,248)',
                           border: '1px solid rgba(99,102,241,0.3)',
                           borderRadius: 12,
-                        }}>{d}</span>
+                        }}>{catMap[id] ? `${catMap[id].icon} ${catMap[id].name}` : `#${id}`}</span>
                       ))}
                     </div>
                   )}
