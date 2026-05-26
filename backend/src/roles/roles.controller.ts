@@ -21,12 +21,12 @@ export class RolesController {
   }
 
   @Post()
-  create(@Body() body: { name: string; description?: string; permissions?: string[] }) {
+  create(@Body() body: { name: string; description?: string; permissions?: string[]; allowedDepartments?: string[] }) {
     return this.rolesService.create(body);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: { name?: string; description?: string; permissions?: string[] }) {
+  update(@Param('id') id: string, @Body() body: { name?: string; description?: string; permissions?: string[]; allowedDepartments?: string[] }) {
     return this.rolesService.update(+id, body);
   }
 

@@ -14,8 +14,14 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
     name: role?.name || '',
     description: role?.description || '',
     permissions: role?.permissions || [],
+    allowedDepartments: role?.allowedDepartments || [],
   });
   const [error, setError] = useState('');
+
+  const { data: departments = [] } = useQuery<string[]>({
+    queryKey: ['user-departments'],
+    queryFn: () => api.get('/users/departments').then(r => r.data),
+  });
 
   const mutation = useMutation({
     mutationFn: () => isNew ? api.post('/roles', form) : api.put(`/roles/${role.id}`, form),
@@ -26,6 +32,13 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
   const togglePerm = (p: string) => setForm(f => ({
     ...f,
     permissions: f.permissions.includes(p) ? f.permissions.filter((x: string) => x !== p) : [...f.permissions, p],
+  }));
+
+  const toggleDept = (d: string) => setForm(f => ({
+    ...f,
+    allowedDepartments: f.allowedDepartments.includes(d)
+      ? f.allowedDepartments.filter((x: string) => x !== d)
+      : [...f.allowedDepartments, d],
   }));
 
   return (
@@ -62,6 +75,33 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
                 </label>
               ))}
             </div>
+          </div>
+          <div className="form-group" style={{
+            background: 'var(--bg-3)',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            padding: '12px 14px',
+          }}>
+            <label className="form-label" style={{ marginBottom: 4 }}>แผนกที่ดูแลได้</label>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-2)', marginBottom: 10 }}>
+              ถ้าไม่เลือก = ใช้แผนกของตัวเอง
+            </p>
+            {departments.length === 0 ? (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>ไม่พบข้อมูลแผนก</span>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {departments.map((d: string) => (
+                  <label key={d} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={form.allowedDepartments.includes(d)}
+                      onChange={() => toggleDept(d)}
+                    />
+                    <span style={{ color: 'var(--text-1)' }}>{d}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="modal-footer">
@@ -117,6 +157,19 @@ export default function AdminRolesPage() {
                       }}>{p}</code>
                     ))}
                   </div>
+                  {r.allowedDepartments && r.allowedDepartments.length > 0 && (
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                      {r.allowedDepartments.map((d: string) => (
+                        <span key={d} style={{
+                          fontSize: '0.72rem', padding: '2px 8px',
+                          background: 'rgba(99,102,241,0.15)',
+                          color: 'rgb(129,140,248)',
+                          border: '1px solid rgba(99,102,241,0.3)',
+                          borderRadius: 12,
+                        }}>{d}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setModal(r)}><Pencil size={13} /></button>

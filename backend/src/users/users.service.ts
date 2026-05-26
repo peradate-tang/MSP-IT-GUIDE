@@ -80,4 +80,13 @@ export class UsersService implements OnModuleInit {
     await this.findOne(id);
     await this.usersRepository.delete(id);
   }
+
+  async findDepartments(): Promise<string[]> {
+    const rows = await this.usersRepository
+      .createQueryBuilder('user')
+      .select('DISTINCT user.department', 'department')
+      .where('user.department IS NOT NULL')
+      .getRawMany();
+    return rows.map((r: any) => r.department).filter(Boolean);
+  }
 }

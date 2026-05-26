@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, In } from 'typeorm';
 import { Article, ArticleStatus } from './article.entity';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -125,14 +125,21 @@ export class ArticlesService {
     limit?: number;
     userRole?: string;
     userDepartment?: string;
+    allowedDepartments?: string[];
   }) {
-    const { search, categoryId, status, page = 1, limit = 10, userRole, userDepartment } = query;
+    const { search, categoryId, status, page = 1, limit = 10, userRole, userDepartment, allowedDepartments } = query;
     const where: any = {};
     if (search) where.title = Like(`%${search}%`);
     if (categoryId) where.categoryId = categoryId;
     if (status) where.status = status;
-    // Editor เห็นเฉพาะบทความของแผนกตัวเอง
-    if (userRole === 'editor' && userDepartment) where.department = userDepartment;
+    // Editor เห็นเฉพาะบทความของแผนกที่ได้รับอนุญาต
+    if (userRole === 'editor') {
+      if (allowedDepartments && allowedDepartments.length > 0) {
+        where.department = In(allowedDepartments);
+      } else if (userDepartment) {
+        where.department = userDepartment;
+      }
+    }
 
     const [data, total] = await this.articlesRepository.findAndCount({
       where,
@@ -171,11 +178,16 @@ export class ArticlesService {
     return this.articlesRepository.save(entity) as unknown as Article;
   }
 
-  async update(id: number, data: Partial<Article>, user?: { role: string; department: string }): Promise<Article> {
+  async update(id: number, data: Partial<Article>, user?: { role: string; department: string; allowedDepartments?: string[] }): Promise<Article> {
     const article = await this.findOne(id);
-    // Editor ต้องอยู่แผนกเดียวกับบทความ
-    if (user?.role === 'editor' && article.department && article.department !== user.department) {
-      throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขบทความของแผนกอื่น');
+    // Editor ต้องอยู่แผนกที่ได้รับอนุญาต
+    if (user?.role === 'editor' && article.department) {
+      const allowed = user.allowedDepartments && user.allowedDepartments.length > 0
+        ? user.allowedDepartments
+        : user.department ? [user.department] : [];
+      if (allowed.length > 0 && !allowed.includes(article.department)) {
+        throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขบทความของแผนกอื่น');
+      }
     }
     if (data.title && !data.slug) {
       data.slug = toSlug(data.title) + '-' + id;
