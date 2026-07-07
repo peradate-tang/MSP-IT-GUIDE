@@ -9,7 +9,6 @@ import ArticleViewPage from './pages/articles/ArticleViewPage';
 import ArticleEditPage from './pages/articles/ArticleEditPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminRolesPage from './pages/admin/AdminRolesPage';
-import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminArticlesPage from './pages/admin/AdminArticlesPage';
 import AdminReportPage from './pages/admin/AdminReportPage';
 
@@ -53,7 +52,6 @@ export default function App() {
           <Route path="admin/articles" element={<RequireAuth><RequireAdmin><AdminArticlesPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/users" element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/roles" element={<RequireAuth><RequireAdmin><AdminRolesPage /></RequireAdmin></RequireAuth>} />
-          <Route path="admin/categories" element={<RequireAuth><RequireAdmin><AdminCategoriesPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/report" element={<RequireAuth><RequireAdmin><AdminReportPage /></RequireAdmin></RequireAuth>} />
         </Route>
       </Routes>

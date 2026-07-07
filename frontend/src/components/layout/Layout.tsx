@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
 import {
   BookOpen, Home, Users, Shield,
-  FolderOpen, FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2, Settings, Globe
+  FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2, Settings, Globe
 } from 'lucide-react';
 import i18n from '../../lib/i18n';
 
@@ -103,7 +103,6 @@ export default function Layout() {
               {adminOpen && (
                 <div style={{ paddingLeft: 8 }}>
                   <NavItem to="/admin/articles" icon={<FileText size={15} />} label={t('nav.admin_articles')} active={location.pathname === '/admin/articles'} />
-                  <NavItem to="/admin/categories" icon={<FolderOpen size={15} />} label={t('nav.admin_categories')} active={location.pathname === '/admin/categories'} />
                   <NavItem to="/admin/users" icon={<Users size={15} />} label={t('nav.admin_users')} active={location.pathname === '/admin/users'} />
                   <NavItem to="/admin/roles" icon={<Shield size={15} />} label={t('nav.admin_roles')} active={location.pathname === '/admin/roles'} />
                   <NavItem to="/admin/report" icon={<BarChart2 size={15} />} label={t('nav.admin_report')} active={location.pathname === '/admin/report'} />
