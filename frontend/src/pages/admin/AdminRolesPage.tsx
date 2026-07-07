@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 
-const ALL_PERMS = ['articles:read', 'articles:write', 'articles:delete', 'categories:write', 'users:read'];
+const ALL_PERMS = ['articles:write', 'articles:delete', 'categories:write', 'users:read'];
 
 function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
   const { t } = useTranslation();
