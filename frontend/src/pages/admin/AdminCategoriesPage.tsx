@@ -32,7 +32,7 @@ function CatModal({ cat, onClose }: { cat: any; onClose: () => void }) {
           <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: 12 }}>
             <div className="form-group">
               <label className="form-label">{t('admin.categories.icon_label')}</label>
-              <input className="input" style={{ fontSize: '1.5rem', textAlign: 'center' }} value={form.icon} onChange={set('icon')} maxLength={2} />
+              <input className="input" style={{ fontSize: '1.5rem', textAlign: 'center' }} value={form.icon} onChange={set('icon')} maxLength={10} />
             </div>
             <div className="form-group">
               <label className="form-label">{t('admin.categories.name_label')}</label>

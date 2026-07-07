@@ -20,21 +20,21 @@ export class CategoriesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RequireRole('admin', 'editor')
+  @RequireRole('admin', 'editor', 'categories:write')
   create(@Body() body: { name: string; description?: string; icon?: string; sortOrder?: number }) {
     return this.categoriesService.create(body);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RequireRole('admin', 'editor')
+  @RequireRole('admin', 'editor', 'categories:write')
   update(@Param('id') id: string, @Body() body: { name?: string; description?: string; icon?: string; sortOrder?: number }) {
     return this.categoriesService.update(+id, body);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RequireRole('admin')
+  @RequireRole('admin', 'categories:write')
   remove(@Param('id') id: string) {
     return this.categoriesService.remove(+id);
   }
