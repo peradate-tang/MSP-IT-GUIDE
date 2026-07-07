@@ -14,13 +14,41 @@ export class CategoriesService implements OnModuleInit {
     const count = await this.categoriesRepository.count();
     if (count === 0) {
       await this.categoriesRepository.save([
-        { name: 'Network', description: 'Networking guides and configurations', icon: '🌐', sortOrder: 1 },
-        { name: 'Security', description: 'Cybersecurity best practices', icon: '🔒', sortOrder: 2 },
-        { name: 'Server', description: 'Server setup and maintenance', icon: '🖥️', sortOrder: 3 },
-        { name: 'Database', description: 'Database administration', icon: '🗄️', sortOrder: 4 },
-        { name: 'Cloud', description: 'Cloud services and deployment', icon: '☁️', sortOrder: 5 },
-        { name: 'Troubleshooting', description: 'Common IT issues and fixes', icon: '🔧', sortOrder: 6 },
+        { name: 'IT', description: 'Information Technology', icon: '💻', sortOrder: 1 },
+        { name: 'Front Office', description: 'Front Office operations', icon: '🛎️', sortOrder: 2 },
+        { name: 'Engineer', description: 'Engineering & Maintenance', icon: '⚙️', sortOrder: 3 },
+        { name: 'Security', description: 'Security & Safety', icon: '🔐', sortOrder: 4 },
+        { name: 'Food & Beverage', description: 'Food and Beverage operations', icon: '🍽️', sortOrder: 5 },
+        { name: 'Housekeeping', description: 'Housekeeping & Laundry', icon: '🧹', sortOrder: 6 },
+        { name: 'Human Resource', description: 'HR & Training', icon: '👥', sortOrder: 7 },
+        { name: 'Finance', description: 'Finance & Accounting', icon: '💰', sortOrder: 8 },
+        { name: 'Sales & Marketing', description: 'Sales & Marketing', icon: '📢', sortOrder: 9 },
       ]);
+    } else {
+      // Update icons to match department names for existing categories
+      const iconMap: Record<string, string> = {
+        'IT': '💻',
+        'Front Office': '🛎️',
+        'Engineer': '⚙️',
+        'Security': '🔐',
+        'Food & Beverage': '🍽️',
+        'Housekeeping': '🧹',
+        'Human Resource': '👥',
+        'Finance': '💰',
+        'Sales & Marketing': '📢',
+        'Network': '🌐',
+        'Server': '🖥️',
+        'Database': '🗄️',
+        'Cloud': '☁️',
+        'Troubleshooting': '🔧',
+      };
+      const all = await this.categoriesRepository.find();
+      for (const cat of all) {
+        const newIcon = iconMap[cat.name];
+        if (newIcon && cat.icon !== newIcon) {
+          await this.categoriesRepository.update(cat.id, { icon: newIcon });
+        }
+      }
     }
   }
 
