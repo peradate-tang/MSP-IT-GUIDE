@@ -32,7 +32,7 @@ export default function HomePage() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '4px 12px', background: 'var(--accent-dim)',
-            border: '1px solid rgba(0,212,255,0.2)', borderRadius: 100,
+            border: '1px solid rgba(169,129,43,0.25)', borderRadius: 100,
             fontSize: '0.75rem', color: 'var(--accent)', fontFamily: 'var(--font-mono)',
             marginBottom: 16,
           }}>
@@ -75,12 +75,9 @@ export default function HomePage() {
             {Array.isArray(categories) && categories.map((cat: any) => (
               <Link key={cat.id} to={`/articles?categoryId=${cat.id}`}
                 style={{ textDecoration: 'none' }}>
-                <div className="card" style={{ textAlign: 'center', padding: '20px 12px', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-                >
-                  <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{cat.icon}</div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>{cat.name}</div>
+                <div className="card category-card">
+                  <div className="category-card-icon">{cat.icon}</div>
+                  <div className="category-card-name">{cat.name}</div>
                 </div>
               </Link>
             ))}

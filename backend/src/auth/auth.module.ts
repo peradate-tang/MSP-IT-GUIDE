@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { resolveJwtSecret } from '../common/utils/jwt-secret';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { UsersModule } from '../users/users.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET') || 'itguide-secret-change-in-prod',
+        secret: resolveJwtSecret(config),
         signOptions: { expiresIn: '7d' },
       }),
       inject: [ConfigService],

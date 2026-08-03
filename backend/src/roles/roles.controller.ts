@@ -3,6 +3,7 @@ import { RolesService } from './roles.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { RequireRole } from '../common/decorators/roles.decorator';
+import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 
 @Controller('roles')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -21,12 +22,12 @@ export class RolesController {
   }
 
   @Post()
-  create(@Body() body: { name: string; description?: string; permissions?: string[]; allowedCategories?: number[] }) {
+  create(@Body() body: CreateRoleDto) {
     return this.rolesService.create(body);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: { name?: string; description?: string; permissions?: string[]; allowedCategories?: number[] }) {
+  update(@Param('id') id: string, @Body() body: UpdateRoleDto) {
     return this.rolesService.update(+id, body);
   }
 

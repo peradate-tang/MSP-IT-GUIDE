@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
-import { Terminal, Lock, User } from 'lucide-react';
+import { Lock, User, ConciergeBell } from 'lucide-react';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -39,13 +39,13 @@ export default function LoginPage() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
-            width: 56, height: 56, background: 'var(--accent)', borderRadius: 12,
+            width: 56, height: 56, background: 'var(--accent)', borderRadius: 14,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 16px',
+            margin: '0 auto 16px', boxShadow: 'var(--shadow-md)',
           }}>
-            <Terminal size={24} color="#000" />
+            <ConciergeBell size={24} color="#FFFBF2" />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>{t('login.title')}</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 4 }}>{t('login.title')}</h1>
           <p style={{ color: 'var(--text-3)', fontSize: '0.875rem', fontFamily: 'var(--font-mono)' }}>{t('login.subtitle')}</p>
         </div>
 

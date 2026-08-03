@@ -4,7 +4,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { extname } from 'path';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { RequireRole } from '../common/decorators/roles.decorator';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -12,6 +15,12 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// นามสกุลไฟล์ที่ห้ามอัปโหลด (executable / script ที่อาจถูกใช้โจมตี)
+const BLOCKED_FILE_EXTENSIONS = [
+  '.exe', '.bat', '.cmd', '.sh', '.msi', '.com', '.scr', '.jar',
+  '.php', '.phtml', '.jsp', '.asp', '.aspx', '.js', '.vbs', '.ps1', '.dll',
+];
 
 function uploadToCloudinary(buffer: Buffer, options: object): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -23,7 +32,8 @@ function uploadToCloudinary(buffer: Buffer, options: object): Promise<any> {
 }
 
 @Controller('upload')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@RequireRole('admin', 'editor', 'articles:write')
 export class UploadController {
   @Post('image')
   @UseInterceptors(
@@ -78,6 +88,13 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
+      fileFilter: (_, file, cb) => {
+        const ext = extname(file.originalname).toLowerCase();
+        if (BLOCKED_FILE_EXTENSIONS.includes(ext)) {
+          return cb(new BadRequestException('This file type is not allowed'), false);
+        }
+        cb(null, true);
+      },
       limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
     }),
   )

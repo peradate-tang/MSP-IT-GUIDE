@@ -33,12 +33,14 @@ export class UsersService implements OnModuleInit {
     }
   }
 
+  private readonly safeSelect: (keyof User)[] = ['id', 'username', 'email', 'fullName', 'department', 'isActive', 'createdAt', 'updatedAt', 'roleId', 'role'];
+
   findAll(): Promise<User[]> {
-    return this.usersRepository.find({ select: ['id', 'username', 'email', 'fullName', 'department', 'isActive', 'createdAt', 'roleId', 'role'] });
+    return this.usersRepository.find({ select: this.safeSelect });
   }
 
   async findOne(id: number): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id }, select: this.safeSelect });
     if (!user) throw new NotFoundException(`User #${id} not found`);
     return user;
   }
@@ -64,7 +66,9 @@ export class UsersService implements OnModuleInit {
 
     const hashed = await bcrypt.hash(data.password, 10);
     const user = this.usersRepository.create({ ...data, password: hashed });
-    return this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+    // ดึงกลับด้วย findOne เพื่อไม่ให้ password hash หลุดไปกับ response
+    return this.findOne(saved.id);
   }
 
   async update(id: number, data: Partial<{ fullName: string; email: string; department: string; isActive: boolean; roleId: number; password: string }>): Promise<User> {

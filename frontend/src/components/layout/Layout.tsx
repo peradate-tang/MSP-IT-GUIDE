@@ -3,8 +3,8 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
 import {
-  BookOpen, Home, Users, Shield, Folder,
-  FileText, LogOut, Menu, X, ChevronDown, Terminal, BarChart2, Settings, Globe
+  BookOpen, Home, Users, Shield, Folder, ConciergeBell,
+  FileText, LogOut, Menu, X, ChevronDown, BarChart2, Settings, Globe
 } from 'lucide-react';
 import i18n from '../../lib/i18n';
 
@@ -61,14 +61,14 @@ export default function Layout() {
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 10 }}>
             <div style={{
-              width: 32, height: 32, background: 'var(--accent)', borderRadius: 6,
+              width: 32, height: 32, background: 'var(--accent)', borderRadius: 8,
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <Terminal size={16} color="#000" />
+              <ConciergeBell size={16} color="#FFFBF2" />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', letterSpacing: '-0.02em' }}>IT Guide</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>Knowledge Base</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text)', letterSpacing: '-0.01em' }}>IT Guide</div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>Knowledge Base</div>
             </div>
           </Link>
           <LangToggle />
@@ -190,11 +190,12 @@ export default function Layout() {
 function NavItem({ to, icon, label, active }: { to: string; icon: React.ReactNode; label: string; active: boolean }) {
   return (
     <Link to={to} style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 8px 8px',
       borderRadius: 'var(--radius)', textDecoration: 'none', fontSize: '0.875rem',
-      color: active ? 'var(--accent)' : 'var(--text-2)',
+      color: active ? 'var(--accent-hover)' : 'var(--text-2)',
       background: active ? 'var(--accent-dim)' : 'transparent',
-      fontWeight: active ? 500 : 400,
+      fontWeight: active ? 600 : 400,
+      borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
       marginBottom: 2, transition: 'all 0.15s',
     }}
       onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--bg-3)'; }}

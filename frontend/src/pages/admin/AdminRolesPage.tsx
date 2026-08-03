@@ -154,7 +154,7 @@ export default function AdminRolesPage() {
                         fontSize: '0.75rem', padding: '2px 8px',
                         background: p === '*' ? 'var(--accent-dim)' : 'var(--bg-3)',
                         color: p === '*' ? 'var(--accent)' : 'var(--text-2)',
-                        border: `1px solid ${p === '*' ? 'rgba(0,212,255,0.2)' : 'var(--border)'}`,
+                        border: `1px solid ${p === '*' ? 'rgba(169,129,43,0.3)' : 'var(--border)'}`,
                         borderRadius: 4, fontFamily: 'var(--font-mono)',
                       }}>{p}</code>
                     ))}
@@ -165,9 +165,9 @@ export default function AdminRolesPage() {
                       {r.allowedCategories.map((id: number) => (
                         <span key={id} style={{
                           fontSize: '0.72rem', padding: '2px 8px',
-                          background: 'rgba(99,102,241,0.15)',
-                          color: 'rgb(129,140,248)',
-                          border: '1px solid rgba(99,102,241,0.3)',
+                          background: 'rgba(107,74,154,0.12)',
+                          color: 'var(--accent-2)',
+                          border: '1px solid rgba(107,74,154,0.3)',
                           borderRadius: 12,
                         }}>{catMap[id] ? `${catMap[id].icon} ${catMap[id].name}` : `#${id}`}</span>
                       ))}

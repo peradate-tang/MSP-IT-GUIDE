@@ -26,6 +26,15 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RequireEditor({ children }: { children: React.ReactNode }) {
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
+  const isEditor = isAdmin || user?.role?.name === 'editor' || user?.role?.permissions?.includes('articles:write');
+  if (!user) return <Navigate to="/" replace />;
+  if (!isEditor) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   const { token, fetchMe } = useAuthStore();
 
@@ -42,10 +51,10 @@ export default function App() {
           <Route path="articles" element={<ArticleListPage />} />
           <Route path="articles/:slug" element={<ArticleViewPage />} />
           <Route path="articles/new" element={
-            <RequireAuth><ArticleEditPage /></RequireAuth>
+            <RequireAuth><RequireEditor><ArticleEditPage /></RequireEditor></RequireAuth>
           } />
           <Route path="articles/:id/edit" element={
-            <RequireAuth><ArticleEditPage /></RequireAuth>
+            <RequireAuth><RequireEditor><ArticleEditPage /></RequireEditor></RequireAuth>
           } />
 
           {/* Admin routes */}

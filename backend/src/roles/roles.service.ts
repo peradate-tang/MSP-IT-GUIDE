@@ -1,13 +1,16 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './role.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class RolesService implements OnModuleInit {
   constructor(
     @InjectRepository(Role)
     private rolesRepository: Repository<Role>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
   ) {}
 
   async onModuleInit() {
@@ -49,6 +52,12 @@ export class RolesService implements OnModuleInit {
 
   async remove(id: number): Promise<void> {
     await this.findOne(id);
+    const usersWithRole = await this.usersRepository.count({ where: { roleId: id } });
+    if (usersWithRole > 0) {
+      throw new ConflictException(
+        `ไม่สามารถลบ Role นี้ได้ เนื่องจากมีผู้ใช้งาน ${usersWithRole} คนกำลังใช้งาน Role นี้อยู่ กรุณาเปลี่ยน Role ของผู้ใช้เหล่านั้นก่อน`,
+      );
+    }
     await this.rolesRepository.delete(id);
   }
 }

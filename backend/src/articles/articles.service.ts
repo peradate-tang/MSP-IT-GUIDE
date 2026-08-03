@@ -25,18 +25,27 @@ function parseCloudinaryUrl(url: string): { publicId: string; resourceType: stri
   return { publicId, resourceType };
 }
 
-async function deleteCloudinaryAssets(htmlContent: string): Promise<void> {
-  try {
-    const urlRegex = /https?:\/\/res\.cloudinary\.com\/[^\s"'<>)]+/g;
-    const urls = htmlContent.match(urlRegex) || [];
-    const seen = new Set<string>();
-    for (const url of urls) {
+function extractCloudinaryUrls(htmlContent: string): Set<string> {
+  const urlRegex = /https?:\/\/res\.cloudinary\.com\/[^\s"'<>)]+/g;
+  return new Set(htmlContent.match(urlRegex) || []);
+}
+
+async function deleteCloudinaryAssetsByUrl(urls: Iterable<string>): Promise<void> {
+  const seen = new Set<string>();
+  for (const url of urls) {
+    try {
       const parsed = parseCloudinaryUrl(url);
       if (!parsed || seen.has(parsed.publicId)) continue;
       seen.add(parsed.publicId);
       await cloudinary.uploader.destroy(parsed.publicId, { resource_type: parsed.resourceType as any }).catch(() => {});
+    } catch {
+      // ไม่ให้ error การลบไฟล์เดี่ยวๆ ทำให้ทั้ง request ล้ม
     }
-  } catch {}
+  }
+}
+
+async function deleteCloudinaryAssets(htmlContent: string): Promise<void> {
+  await deleteCloudinaryAssetsByUrl(extractCloudinaryUrls(htmlContent));
 }
 
 function toSlug(title: string): string {
@@ -128,15 +137,28 @@ export class ArticlesService {
     allowedCategories?: number[];
   }) {
     const { search, categoryId, status, page = 1, limit = 10, isAdmin, isEditor, allowedCategories } = query;
-    const where: any = {};
-    if (search) where.title = Like(`%${search}%`);
-    if (status) where.status = status;
-    // Editor ที่มี allowedCategories → เห็นเฉพาะหมวดที่กำหนด
+    const baseWhere: any = {};
+    if (status) baseWhere.status = status;
+    // Editor ที่มี allowedCategories → เห็นเฉพาะหมวดที่กำหนด (ห้าม categoryId ที่ส่งมาเอง bypass ข้อจำกัดนี้)
     if (!isAdmin && isEditor && allowedCategories && allowedCategories.length > 0) {
-      where.categoryId = categoryId ? categoryId : In(allowedCategories);
+      if (categoryId) {
+        // ถ้า categoryId ที่ขอ ไม่อยู่ใน allowedCategories ให้คืนค่าว่าง แทนที่จะหลุดไปหมวดอื่น
+        baseWhere.categoryId = allowedCategories.includes(categoryId) ? categoryId : -1;
+      } else {
+        baseWhere.categoryId = In(allowedCategories);
+      }
     } else {
-      if (categoryId) where.categoryId = categoryId;
+      if (categoryId) baseWhere.categoryId = categoryId;
     }
+
+    // ค้นหาครอบคลุม title, content และ tags (ไม่ใช่แค่ title เหมือนเดิม)
+    const where = search
+      ? [
+          { ...baseWhere, title: Like(`%${search}%`) },
+          { ...baseWhere, content: Like(`%${search}%`) },
+          { ...baseWhere, tags: Like(`%${search}%`) },
+        ]
+      : baseWhere;
 
     const [data, total] = await this.articlesRepository.findAndCount({
       where,
@@ -150,6 +172,27 @@ export class ArticlesService {
   async findOne(id: number): Promise<Article> {
     const article = await this.articlesRepository.findOne({ where: { id } });
     if (!article) throw new NotFoundException(`Article #${id} not found`);
+    return article;
+  }
+
+  async findOneForViewer(
+    id: number,
+    viewer?: { userId?: number; isAdmin?: boolean; isEditor?: boolean; allowedCategories?: number[] },
+  ): Promise<Article> {
+    const article = await this.findOne(id);
+
+    if (article.status !== ArticleStatus.PUBLISHED) {
+      const isOwner = viewer?.userId != null && viewer.userId === article.authorId;
+      const isAllowedEditor =
+        !!viewer?.isEditor &&
+        (!viewer?.allowedCategories?.length || !article.categoryId || viewer.allowedCategories.includes(article.categoryId));
+
+      if (!viewer?.isAdmin && !isOwner && !isAllowedEditor) {
+        // ใช้ NotFoundException แทน Forbidden เพื่อไม่ให้ยืนยันการมีอยู่ของ draft/บทความที่ไม่มีสิทธิ์เห็น
+        throw new NotFoundException(`Article #${id} not found`);
+      }
+    }
+
     return article;
   }
 
@@ -187,8 +230,22 @@ export class ArticlesService {
     if (data.title && !data.slug) {
       data.slug = toSlug(data.title) + '-' + id;
     }
+
+    const oldContent = article.content || '';
     await this.articlesRepository.update(id, data as any);
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+
+    // ถ้าเนื้อหาถูกแก้ไข ให้ลบไฟล์ Cloudinary ที่ถูกเอาออกจากบทความ (กันไฟล์กำพร้าค้างพื้นที่)
+    if (typeof data.content === 'string' && data.content !== oldContent) {
+      const oldUrls = extractCloudinaryUrls(oldContent);
+      const newUrls = extractCloudinaryUrls(updated.content || '');
+      const removedUrls = [...oldUrls].filter((u) => !newUrls.has(u));
+      if (removedUrls.length > 0) {
+        deleteCloudinaryAssetsByUrl(removedUrls).catch(() => {});
+      }
+    }
+
+    return updated;
   }
 
   async remove(id: number): Promise<void> {
