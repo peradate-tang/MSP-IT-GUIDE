@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 
-function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose: () => void }) {
+function UserModal({ user, roles, categories, onClose }: { user: any; roles: any[]; categories: any[]; onClose: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const isNew = !user?.id;
@@ -12,7 +12,7 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
     username: user?.username || '',
     email: user?.email || '',
     fullName: user?.fullName || '',
-    department: user?.department || '',
+    departmentCategoryId: user?.departmentCategory?.id || '',
     password: '',
     roleId: user?.role?.id || '',
     isActive: user?.isActive ?? true,
@@ -21,7 +21,11 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
 
   const mutation = useMutation({
     mutationFn: () => {
-      const payload: any = { ...form, roleId: Number(form.roleId) };
+      const payload: any = {
+        ...form,
+        roleId: Number(form.roleId),
+        departmentCategoryId: form.departmentCategoryId ? Number(form.departmentCategoryId) : null,
+      };
       if (!payload.password) delete payload.password;
       if (isNew) return api.post('/users', payload);
       return api.put(`/users/${user.id}`, payload);
@@ -59,7 +63,13 @@ function UserModal({ user, roles, onClose }: { user: any; roles: any[]; onClose:
           </div>
           <div className="form-group">
             <label className="form-label">แผนก (Department)</label>
-            <input className="input" placeholder="เช่น IT, HR, Finance" value={form.department} onChange={set('department')} />
+            <select className="input" value={form.departmentCategoryId} onChange={set('departmentCategoryId')}>
+              <option value="">— ไม่ระบุแผนก —</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+            </select>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+              user จะสร้าง/แก้ไข/ลบบทความได้เฉพาะในหมวดหมู่นี้เท่านั้น (ยกเว้น role admin ที่ทำได้ทุกหมวด)
+            </span>
           </div>
           <div className="form-group">
             <label className="form-label">{t('admin.users.role_label')}</label>
@@ -91,6 +101,7 @@ export default function AdminUsersPage() {
 
   const { data: users, isLoading } = useQuery({ queryKey: ['users'], queryFn: () => api.get('/users').then(r => r.data) });
   const { data: roles } = useQuery({ queryKey: ['roles'], queryFn: () => api.get('/roles').then(r => r.data) });
+  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: () => api.get('/categories').then(r => r.data) });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/users/${id}`),
@@ -99,7 +110,7 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      {modal !== null && <UserModal user={modal} roles={roles || []} onClose={() => setModal(null)} />}
+      {modal !== null && <UserModal user={modal} roles={roles || []} categories={categories || []} onClose={() => setModal(null)} />}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.users.title')}</h1>
@@ -138,7 +149,9 @@ export default function AdminUsersPage() {
                   </div>
                 </td>
                 <td style={{ fontSize: '0.875rem', color: 'var(--text-2)' }}>{u.email}</td>
-                <td style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>{u.department || '—'}</td>
+                <td style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>
+                  {u.departmentCategory ? `${u.departmentCategory.icon} ${u.departmentCategory.name}` : '—'}
+                </td>
                 <td><span className={`badge badge-${u.role?.name}`}>{u.role?.name || '—'}</span></td>
                 <td>
                   <span style={{

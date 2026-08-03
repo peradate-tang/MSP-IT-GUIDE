@@ -6,8 +6,8 @@ interface User {
   username: string;
   email: string;
   fullName: string;
-  department?: string;
-  role: { id: number; name: string; permissions: string[]; allowedCategories?: number[] };
+  departmentCategory?: { id: number; name: string; icon?: string } | null;
+  role: { id: number; name: string; permissions: string[] };
 }
 
 interface AuthState {

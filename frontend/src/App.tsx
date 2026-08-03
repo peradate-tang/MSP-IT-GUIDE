@@ -56,6 +56,9 @@ export default function App() {
           <Route path="articles/:id/edit" element={
             <RequireAuth><RequireEditor><ArticleEditPage /></RequireEditor></RequireAuth>
           } />
+          <Route path="articles-manage" element={
+            <RequireAuth><RequireEditor><AdminArticlesPage /></RequireEditor></RequireAuth>
+          } />
 
           {/* Admin routes */}
           <Route path="admin" element={<RequireAuth><RequireAdmin><Navigate to="/admin/articles" /></RequireAdmin></RequireAuth>} />

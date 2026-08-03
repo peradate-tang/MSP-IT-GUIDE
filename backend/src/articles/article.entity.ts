@@ -37,9 +37,6 @@ export class Article {
   @Column({ default: 0 })
   viewCount: number;
 
-  @Column({ nullable: true })
-  department: string;
-
   @ManyToOne(() => Category, (cat) => cat.articles, { eager: true, nullable: true })
   @JoinColumn({ name: 'categoryId' })
   category: Category;

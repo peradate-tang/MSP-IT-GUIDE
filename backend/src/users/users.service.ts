@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, ConflictException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from './user.entity';
 import { RolesService } from '../roles/roles.service';
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -11,6 +12,7 @@ export class UsersService implements OnModuleInit {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private rolesService: RolesService,
+    private categoriesService: CategoriesService,
   ) {}
 
   async onModuleInit() {
@@ -33,7 +35,7 @@ export class UsersService implements OnModuleInit {
     }
   }
 
-  private readonly safeSelect: (keyof User)[] = ['id', 'username', 'email', 'fullName', 'department', 'isActive', 'createdAt', 'updatedAt', 'roleId', 'role'];
+  private readonly safeSelect: (keyof User)[] = ['id', 'username', 'email', 'fullName', 'departmentCategoryId', 'departmentCategory', 'isActive', 'createdAt', 'updatedAt', 'roleId', 'role'];
 
   findAll(): Promise<User[]> {
     return this.usersRepository.find({ select: this.safeSelect });
@@ -53,16 +55,27 @@ export class UsersService implements OnModuleInit {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  // ตรวจว่า departmentCategoryId ที่ส่งมามีอยู่จริง กัน FK error ที่อ่านยากตอนบันทึก
+  private async assertCategoryExists(categoryId?: number | null): Promise<void> {
+    if (categoryId == null) return;
+    try {
+      await this.categoriesService.findOne(categoryId);
+    } catch {
+      throw new BadRequestException(`ไม่พบหมวดหมู่ #${categoryId} — กรุณาเลือกแผนกจากรายการที่มีอยู่`);
+    }
+  }
+
   async create(data: {
     username: string;
     email: string;
     password: string;
     fullName?: string;
-    department?: string;
+    departmentCategoryId?: number;
     roleId?: number;
   }): Promise<User> {
     const exists = await this.usersRepository.findOne({ where: [{ username: data.username }, { email: data.email }] });
     if (exists) throw new ConflictException('Username or email already exists');
+    await this.assertCategoryExists(data.departmentCategoryId);
 
     const hashed = await bcrypt.hash(data.password, 10);
     const user = this.usersRepository.create({ ...data, password: hashed });
@@ -71,8 +84,9 @@ export class UsersService implements OnModuleInit {
     return this.findOne(saved.id);
   }
 
-  async update(id: number, data: Partial<{ fullName: string; email: string; department: string; isActive: boolean; roleId: number; password: string }>): Promise<User> {
+  async update(id: number, data: Partial<{ fullName: string; email: string; departmentCategoryId: number; isActive: boolean; roleId: number; password: string }>): Promise<User> {
     await this.findOne(id);
+    await this.assertCategoryExists(data.departmentCategoryId);
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
@@ -83,14 +97,5 @@ export class UsersService implements OnModuleInit {
   async remove(id: number): Promise<void> {
     await this.findOne(id);
     await this.usersRepository.delete(id);
-  }
-
-  async findDepartments(): Promise<string[]> {
-    const rows = await this.usersRepository
-      .createQueryBuilder('user')
-      .select('DISTINCT user.department', 'department')
-      .where('user.department IS NOT NULL')
-      .getRawMany();
-    return rows.map((r: any) => r.department).filter(Boolean);
   }
 }

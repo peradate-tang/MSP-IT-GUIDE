@@ -1,13 +1,19 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './category.entity';
+import { User } from '../users/user.entity';
+import { Article } from '../articles/article.entity';
 
 @Injectable()
 export class CategoriesService implements OnModuleInit {
   constructor(
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    @InjectRepository(Article)
+    private articlesRepository: Repository<Article>,
   ) {}
 
   async onModuleInit() {
@@ -75,6 +81,20 @@ export class CategoriesService implements OnModuleInit {
 
   async remove(id: number): Promise<void> {
     await this.findOne(id);
+    const [usersInDept, articlesInCat] = await Promise.all([
+      this.usersRepository.count({ where: { departmentCategoryId: id } }),
+      this.articlesRepository.count({ where: { categoryId: id } }),
+    ]);
+    if (usersInDept > 0) {
+      throw new ConflictException(
+        `ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากมีผู้ใช้งาน ${usersInDept} คนอยู่ในแผนกนี้ กรุณาย้ายแผนกของผู้ใช้เหล่านั้นก่อน`,
+      );
+    }
+    if (articlesInCat > 0) {
+      throw new ConflictException(
+        `ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากยังมีบทความ ${articlesInCat} บทความอยู่ในหมวดนี้ กรุณาย้ายหรือลบบทความเหล่านั้นก่อน`,
+      );
+    }
     await this.categoriesRepository.delete(id);
   }
 }

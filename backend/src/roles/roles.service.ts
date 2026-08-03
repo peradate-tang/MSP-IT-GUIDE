@@ -14,13 +14,13 @@ export class RolesService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // Seed default roles
+    // Seed default roles — ทุก user ที่สร้างคือคนที่ต้องเข้ามาเขียนบทความ (editor) หรือ admin
+    // การอ่านบทความไม่ต้อง login อยู่แล้ว จึงไม่จำเป็นต้องมี role "viewer" แยกอีกต่อไป
     const adminRole = await this.rolesRepository.findOne({ where: { name: 'admin' } });
     if (!adminRole) {
       await this.rolesRepository.save([
-        { name: 'admin', description: 'Administrator with full access', permissions: ['*'] },
-        { name: 'editor', description: 'Can create and edit articles', permissions: ['articles:read', 'articles:write'] },
-        { name: 'viewer', description: 'Read-only access', permissions: ['articles:read'] },
+        { name: 'admin', description: 'ผู้ดูแลระบบ — จัดการได้ทุกหมวดหมู่/บทความ/ผู้ใช้', permissions: ['*'] },
+        { name: 'editor', description: 'พนักงานแผนก — สร้าง/แก้ไข/ลบบทความได้เฉพาะในหมวดหมู่ของแผนกตัวเอง', permissions: ['articles:read', 'articles:write'] },
       ]);
     }
   }

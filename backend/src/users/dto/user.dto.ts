@@ -25,9 +25,8 @@ export class CreateUserDto {
   fullName?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  department?: string;
+  @IsInt()
+  departmentCategoryId?: number;
 
   @IsOptional()
   @IsInt()
@@ -46,9 +45,8 @@ export class UpdateUserDto {
   email?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  department?: string;
+  @IsInt()
+  departmentCategoryId?: number;
 
   @IsOptional()
   @IsBoolean()

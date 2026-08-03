@@ -16,11 +16,6 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get('departments')
-  findDepartments() {
-    return this.usersService.findDepartments();
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);

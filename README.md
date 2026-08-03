@@ -96,11 +96,18 @@ Password: admin1234
 
 ## 🔐 Role และสิทธิ์
 
-| Role    | สิทธิ์                                          |
-|---------|------------------------------------------------|
-| admin   | ทุกอย่าง รวมถึงจัดการ User/Role/Category/Article |
-| editor  | สร้าง/แก้ไขบทความและหมวดหมู่                    |
-| viewer  | อ่านบทความอย่างเดียว                            |
+การอ่านบทความ (ที่เผยแพร่แล้ว) **ไม่ต้อง login** — ใครก็เข้ามาอ่านได้เลย
+
+ผู้ใช้ที่ต้อง login มีแค่ 2 role:
+
+| Role   | สิทธิ์ |
+|--------|--------|
+| admin  | จัดการได้ทุกอย่าง ทุกหมวดหมู่ ทุกบทความ รวมถึง User/Role/Category |
+| editor | สร้าง/แก้ไข/ลบบทความได้ **เฉพาะในหมวดหมู่ (แผนก) ที่ตัวเองถูกผูกไว้เท่านั้น** |
+
+**แผนกของ editor แต่ละคน** กำหนดผ่านฟิลด์ "แผนก" ตอนสร้าง/แก้ไข user (แอดมินเป็นคนตั้งค่า) โดยผูกตรงกับหมวดหมู่ (Category) ที่มีอยู่จริงในระบบ เช่น ถ้า user ผูกแผนก "Front Office" จะสร้าง/แก้ไข/ลบบทความได้เฉพาะบทความในหมวด Front Office เท่านั้น จะสร้างหรือย้ายบทความไปหมวดอื่นไม่ได้ ต่อให้พยายามส่งค่าอื่นมาก็ตาม (ระบบบังคับที่ backend)
+
+หมวดหมู่ (Category) จัดการได้เฉพาะ admin เท่านั้น เพราะถือเป็นโครงสร้างแผนกทั้งองค์กร
 
 ---
 
@@ -110,14 +117,14 @@ Password: admin1234
 |--------|---------------------------|----------------|
 | POST   | /api/auth/login           | Public         |
 | GET    | /api/auth/me              | JWT            |
-| GET    | /api/articles             | Public         |
+| GET    | /api/articles             | Public (editor/admin เห็นเพิ่มตามสิทธิ์) |
 | GET    | /api/articles/slug/:slug  | Public         |
-| POST   | /api/articles             | editor/admin   |
-| PUT    | /api/articles/:id         | editor/admin   |
-| DELETE | /api/articles/:id         | admin          |
+| POST   | /api/articles             | editor/admin (editor สร้างได้เฉพาะหมวดแผนกตัวเอง) |
+| PUT    | /api/articles/:id         | editor/admin (editor แก้ได้เฉพาะหมวดแผนกตัวเอง) |
+| DELETE | /api/articles/:id         | editor/admin (editor ลบได้เฉพาะหมวดแผนกตัวเอง) |
 | GET    | /api/categories           | Public         |
-| POST   | /api/categories           | editor/admin   |
-| PUT    | /api/categories/:id       | editor/admin   |
+| POST   | /api/categories           | admin          |
+| PUT    | /api/categories/:id       | admin          |
 | DELETE | /api/categories/:id       | admin          |
 | GET    | /api/users                | admin          |
 | POST   | /api/users                | admin          |

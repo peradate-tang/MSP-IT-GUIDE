@@ -80,7 +80,10 @@ export default function Layout() {
           <NavItem to="/articles" icon={<BookOpen size={15} />} label={t('nav.articles')} active={location.pathname.startsWith('/articles') && !location.pathname.includes('edit') && !location.pathname.includes('new')} />
 
           {isEditor && (
-            <NavItem to="/articles/new" icon={<FileText size={15} />} label={t('articles.new')} active={location.pathname === '/articles/new'} />
+            <>
+              <NavItem to="/articles-manage" icon={<FileText size={15} />} label={t('nav.manage_articles')} active={location.pathname === '/articles-manage'} />
+              <NavItem to="/articles/new" icon={<FileText size={15} />} label={t('articles.new')} active={location.pathname === '/articles/new'} />
+            </>
           )}
 
           {isAdmin && (

@@ -3,6 +3,7 @@ import {
   CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn,
 } from 'typeorm';
 import { Role } from '../roles/role.entity';
+import { Category } from '../categories/category.entity';
 
 @Entity('users')
 export class User {
@@ -21,8 +22,14 @@ export class User {
   @Column({ nullable: true })
   fullName: string;
 
+  // แผนกของ user = หมวดหมู่ที่ user คนนี้มีสิทธิ์สร้าง/แก้ไข/ลบบทความ (ยกเว้น admin ที่ทำได้ทุกหมวด)
+  // ผูกกับ Category โดยตรงแทนข้อความอิสระเดิม กัน typo/ไม่ตรงกับหมวดหมู่จริง
+  @ManyToOne(() => Category, { eager: true, nullable: true })
+  @JoinColumn({ name: 'departmentCategoryId' })
+  departmentCategory: Category;
+
   @Column({ nullable: true })
-  department: string;
+  departmentCategoryId: number;
 
   @Column({ default: true })
   isActive: boolean;

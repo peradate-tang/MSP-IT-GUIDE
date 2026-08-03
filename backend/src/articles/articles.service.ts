@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Article, ArticleStatus } from './article.entity';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -91,7 +91,7 @@ export class ArticlesService {
             content: '# Getting Started with Network Configuration\n\nThis guide covers the fundamentals of setting up a network.\n\n## Prerequisites\n- Basic understanding of IP addressing\n- Access to network equipment\n\n## Step 1: Plan Your Network\nStart by drawing a network diagram.\n\n## Step 2: Configure Your Router\nAccess the admin panel at `192.168.1.1`.\n\n## Step 3: Set Up DHCP\nEnable DHCP to automatically assign IP addresses.',
             status: ArticleStatus.PUBLISHED,
             tags: ['network', 'beginner', 'configuration'],
-            categoryId: getCatId('Network'),
+            categoryId: getCatId('IT'),
             authorId: 1,
           },
           {
@@ -101,7 +101,7 @@ export class ArticlesService {
             content: '# Linux Server Hardening Checklist\n\n## 1. Update the System\n```bash\napt update && apt upgrade -y\n```\n\n## 2. Configure SSH\nDisable root login and use key-based authentication.\n\n## 3. Set Up UFW Firewall\n```bash\nufw allow OpenSSH\nufw enable\n```',
             status: ArticleStatus.PUBLISHED,
             tags: ['linux', 'security', 'server'],
-            categoryId: getCatId('Security'),
+            categoryId: getCatId('IT'),
             authorId: 1,
           },
           {
@@ -111,7 +111,7 @@ export class ArticlesService {
             content: '# MySQL Backup and Recovery Guide\n\n## Full Backup\n```bash\nmysqldump -u root -p --all-databases > backup.sql\n```\n\n## Restore\n```bash\nmysql -u root -p mydb < backup.sql\n```',
             status: ArticleStatus.PUBLISHED,
             tags: ['mysql', 'database', 'backup'],
-            categoryId: getCatId('Database'),
+            categoryId: getCatId('IT'),
             authorId: 1,
           },
         ];
@@ -134,19 +134,15 @@ export class ArticlesService {
     limit?: number;
     isAdmin?: boolean;
     isEditor?: boolean;
-    allowedCategories?: number[];
+    departmentCategoryId?: number | null;
   }) {
-    const { search, categoryId, status, page = 1, limit = 10, isAdmin, isEditor, allowedCategories } = query;
+    const { search, categoryId, status, page = 1, limit = 10, isAdmin, isEditor, departmentCategoryId } = query;
     const baseWhere: any = {};
     if (status) baseWhere.status = status;
-    // Editor ที่มี allowedCategories → เห็นเฉพาะหมวดที่กำหนด (ห้าม categoryId ที่ส่งมาเอง bypass ข้อจำกัดนี้)
-    if (!isAdmin && isEditor && allowedCategories && allowedCategories.length > 0) {
-      if (categoryId) {
-        // ถ้า categoryId ที่ขอ ไม่อยู่ใน allowedCategories ให้คืนค่าว่าง แทนที่จะหลุดไปหมวดอื่น
-        baseWhere.categoryId = allowedCategories.includes(categoryId) ? categoryId : -1;
-      } else {
-        baseWhere.categoryId = In(allowedCategories);
-      }
+    // Editor ที่ผูกแผนก (departmentCategoryId) → เห็นเฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
+    // (ห้าม categoryId ที่ส่งมาเองใน query bypass ข้อจำกัดนี้)
+    if (!isAdmin && isEditor && departmentCategoryId != null) {
+      baseWhere.categoryId = categoryId && categoryId !== departmentCategoryId ? -1 : departmentCategoryId;
     } else {
       if (categoryId) baseWhere.categoryId = categoryId;
     }
@@ -177,7 +173,7 @@ export class ArticlesService {
 
   async findOneForViewer(
     id: number,
-    viewer?: { userId?: number; isAdmin?: boolean; isEditor?: boolean; allowedCategories?: number[] },
+    viewer?: { userId?: number; isAdmin?: boolean; isEditor?: boolean; departmentCategoryId?: number | null },
   ): Promise<Article> {
     const article = await this.findOne(id);
 
@@ -185,7 +181,7 @@ export class ArticlesService {
       const isOwner = viewer?.userId != null && viewer.userId === article.authorId;
       const isAllowedEditor =
         !!viewer?.isEditor &&
-        (!viewer?.allowedCategories?.length || !article.categoryId || viewer.allowedCategories.includes(article.categoryId));
+        (viewer?.departmentCategoryId == null || !article.categoryId || viewer.departmentCategoryId === article.categoryId);
 
       if (!viewer?.isAdmin && !isOwner && !isAllowedEditor) {
         // ใช้ NotFoundException แทน Forbidden เพื่อไม่ให้ยืนยันการมีอยู่ของ draft/บทความที่ไม่มีสิทธิ์เห็น
@@ -206,25 +202,37 @@ export class ArticlesService {
   async create(
     data: Partial<Article> & { title: string; content: string },
     authorId: number,
-    userDepartment?: string,
+    author?: { isAdmin?: boolean; departmentCategoryId?: number | null },
   ): Promise<Article> {
+    let categoryId = data.categoryId;
+    if (!author?.isAdmin) {
+      if (author?.departmentCategoryId == null) {
+        throw new ForbiddenException('บัญชีของคุณยังไม่ได้ผูกแผนก กรุณาติดต่อผู้ดูแลระบบให้กำหนดแผนกก่อนสร้างบทความ');
+      }
+      // Editor สร้างบทความได้เฉพาะในหมวดของแผนกตัวเองเท่านั้น ไม่ว่าจะส่ง categoryId อะไรมาในคำขอก็ตาม
+      categoryId = author.departmentCategoryId;
+    }
+
     const slug = data.slug || toSlug(data.title) + '-' + Date.now();
     const entity = this.articlesRepository.create({
       ...data,
+      categoryId,
       slug,
       authorId,
-      department: userDepartment || null,
     } as any);
     return this.articlesRepository.save(entity) as unknown as Article;
   }
 
-  async update(id: number, data: Partial<Article>, user?: { role: string; department: string; allowedCategories?: number[]; permissions?: string[] }): Promise<Article> {
+  async update(id: number, data: Partial<Article>, user?: { isAdmin?: boolean; departmentCategoryId?: number | null }): Promise<Article> {
     const article = await this.findOne(id);
-    // ถ้าไม่ใช่ admin และมีการจำกัด category → ตรวจสอบสิทธิ์
-    const isAdmin = user?.role === 'admin' || user?.permissions?.includes('*');
-    if (!isAdmin && user?.allowedCategories && user.allowedCategories.length > 0 && article.categoryId) {
-      if (!user.allowedCategories.includes(article.categoryId)) {
+    if (!user?.isAdmin) {
+      // Editor แก้ไขได้เฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
+      if (user?.departmentCategoryId == null || article.categoryId !== user.departmentCategoryId) {
         throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขบทความในหมวดหมู่นี้');
+      }
+      // กันไม่ให้ editor ย้ายบทความออกนอกแผนกตัวเองผ่านการแก้ categoryId
+      if (data.categoryId != null && data.categoryId !== user.departmentCategoryId) {
+        throw new ForbiddenException('คุณไม่สามารถย้ายบทความไปหมวดหมู่อื่นนอกแผนกของคุณได้');
       }
     }
     if (data.title && !data.slug) {
@@ -248,8 +256,14 @@ export class ArticlesService {
     return updated;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, user?: { isAdmin?: boolean; departmentCategoryId?: number | null }): Promise<void> {
     const article = await this.findOne(id);
+    if (!user?.isAdmin) {
+      // Editor ลบได้เฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
+      if (user?.departmentCategoryId == null || article.categoryId !== user.departmentCategoryId) {
+        throw new ForbiddenException('คุณไม่มีสิทธิ์ลบบทความในหมวดหมู่นี้');
+      }
+    }
     await this.articlesRepository.delete(id);
     await deleteCloudinaryAssets(article.content || '');
   }

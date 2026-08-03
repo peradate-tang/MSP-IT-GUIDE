@@ -35,7 +35,7 @@ export class ArticlesController {
       limit: Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, MAX_PAGE_SIZE) : 10,
       isAdmin,
       isEditor,
-      allowedCategories: isAdmin ? [] : user?.allowedCategories,
+      departmentCategoryId: isAdmin ? null : user?.departmentCategoryId,
     });
   }
 
@@ -54,7 +54,7 @@ export class ArticlesController {
       userId: user?.sub,
       isAdmin,
       isEditor,
-      allowedCategories: user?.allowedCategories,
+      departmentCategoryId: user?.departmentCategoryId,
     });
   }
 
@@ -62,20 +62,26 @@ export class ArticlesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'editor', 'articles:write')
   create(@Body() body: CreateArticleDto, @Request() req) {
-    return this.articlesService.create(body, req.user.sub, req.user.department);
+    const isAdmin = req.user.role === 'admin' || req.user.permissions?.includes('*');
+    return this.articlesService.create(body, req.user.sub, {
+      isAdmin,
+      departmentCategoryId: req.user.departmentCategoryId,
+    });
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'editor', 'articles:write')
   update(@Param('id') id: string, @Body() body: UpdateArticleDto, @Request() req) {
-    return this.articlesService.update(+id, body, { role: req.user.role, department: req.user.department, allowedCategories: req.user.allowedCategories, permissions: req.user.permissions });
+    const isAdmin = req.user.role === 'admin' || req.user.permissions?.includes('*');
+    return this.articlesService.update(+id, body, { isAdmin, departmentCategoryId: req.user.departmentCategoryId });
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @RequireRole('admin', 'articles:delete')
-  remove(@Param('id') id: string) {
-    return this.articlesService.remove(+id);
+  @RequireRole('admin', 'editor', 'articles:write', 'articles:delete')
+  remove(@Param('id') id: string, @Request() req) {
+    const isAdmin = req.user.role === 'admin' || req.user.permissions?.includes('*');
+    return this.articlesService.remove(+id, { isAdmin, departmentCategoryId: req.user.departmentCategoryId });
   }
 }

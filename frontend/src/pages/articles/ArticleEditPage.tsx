@@ -23,12 +23,15 @@ export default function ArticleEditPage() {
   const attachInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<RichEditorHandle>(null);
 
+  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
+  const myDepartmentCategory = user?.departmentCategory || null;
+
   const [form, setForm] = useState({
     title: '',
     excerpt: '',
     content: '',
     status: 'draft',
-    categoryId: '',
+    categoryId: !isAdmin && myDepartmentCategory ? String(myDepartmentCategory.id) : '',
     tags: '',
   });
 
@@ -37,11 +40,10 @@ export default function ArticleEditPage() {
     queryFn: () => api.get('/categories').then(r => r.data),
   });
 
-  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
-  const allowedCatIds: number[] = user?.role?.allowedCategories || [];
-  const categories = isAdmin || allowedCatIds.length === 0
+  // Editor ที่ไม่ใช่ admin สร้าง/แก้ไขได้เฉพาะในหมวดของแผนกตัวเองเท่านั้น จึงล็อกตัวเลือกไว้ ไม่ให้เลือกหมวดอื่น
+  const categories = isAdmin
     ? allCategories
-    : (allCategories as any[] | undefined)?.filter((c: any) => allowedCatIds.includes(c.id));
+    : (myDepartmentCategory ? [myDepartmentCategory] : []);
 
   const { data: existing } = useQuery({
     queryKey: ['article-edit', id],
@@ -61,6 +63,7 @@ export default function ArticleEditPage() {
       });
     }
   }, [existing]);
+
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -174,13 +177,19 @@ export default function ArticleEditPage() {
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>
           {isNew ? t('articles.new') : t('articles.edit')}
         </h1>
-        <button className="btn btn-primary" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+        <button className="btn btn-primary" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || (!isAdmin && !myDepartmentCategory)}>
           <Save size={14} />
           {saveMutation.isPending ? t('common.saving') : t('common.save')}
         </button>
       </div>
 
       {error && <div className="alert alert-error" style={{ marginBottom: 16 }}>{error}</div>}
+
+      {!isAdmin && !myDepartmentCategory && (
+        <div className="alert alert-error" style={{ marginBottom: 16 }}>
+          บัญชีของคุณยังไม่ได้ผูกแผนก จึงยังสร้าง/แก้ไขบทความไม่ได้ — กรุณาติดต่อผู้ดูแลระบบให้กำหนดแผนกให้ก่อน
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20 }}>
         {/* Main */}
@@ -243,12 +252,17 @@ export default function ArticleEditPage() {
 
             <div className="form-group">
               <label className="form-label">{t('articles.category')}</label>
-              <select className="input" value={form.categoryId} onChange={set('categoryId')}>
-                <option value="">{t('articles.no_category')}</option>
+              <select className="input" value={form.categoryId} onChange={set('categoryId')} disabled={!isAdmin}>
+                {isAdmin && <option value="">{t('articles.no_category')}</option>}
                 {Array.isArray(categories) && categories.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                 ))}
               </select>
+              {!isAdmin && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                  บทความจะถูกสร้างในหมวดของแผนกคุณเสมอ
+                </span>
+              )}
             </div>
 
             <div className="form-group">

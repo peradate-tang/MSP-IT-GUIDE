@@ -20,6 +20,7 @@
   "nav": {
     "home": "หน้าหลัก",
     "articles": "บทความ",
+    "manage_articles": "บทความของแผนกฉัน",
     "search": "ค้นหา",
     "admin": "จัดการระบบ",
     "admin_articles": "จัดการบทความ",

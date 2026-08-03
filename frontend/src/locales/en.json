@@ -20,6 +20,7 @@
   "nav": {
     "home": "Home",
     "articles": "Articles",
+    "manage_articles": "Manage Articles",
     "search": "Search",
     "admin": "Administration",
     "admin_articles": "Manage Articles",

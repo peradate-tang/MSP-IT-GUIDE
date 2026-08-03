@@ -15,9 +15,6 @@ export class Role {
   @Column({ type: 'json', nullable: true })
   permissions: string[];
 
-  @Column({ type: 'json', nullable: true })
-  allowedCategories: number[];
-
   @CreateDateColumn()
   createdAt: Date;
 
