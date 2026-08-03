@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ArticleListPage from './pages/articles/ArticleListPage';
 import ArticleViewPage from './pages/articles/ArticleViewPage';
 import ArticleEditPage from './pages/articles/ArticleEditPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminRolesPage from './pages/admin/AdminRolesPage';
 import AdminArticlesPage from './pages/admin/AdminArticlesPage';
@@ -50,6 +51,7 @@ export default function App() {
           {/* Admin routes */}
           <Route path="admin" element={<RequireAuth><RequireAdmin><Navigate to="/admin/articles" /></RequireAdmin></RequireAuth>} />
           <Route path="admin/articles" element={<RequireAuth><RequireAdmin><AdminArticlesPage /></RequireAdmin></RequireAuth>} />
+          <Route path="admin/categories" element={<RequireAuth><RequireAdmin><AdminCategoriesPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/users" element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/roles" element={<RequireAuth><RequireAdmin><AdminRolesPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/report" element={<RequireAuth><RequireAdmin><AdminReportPage /></RequireAdmin></RequireAuth>} />
