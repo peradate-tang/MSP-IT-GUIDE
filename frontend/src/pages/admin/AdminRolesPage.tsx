@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 const ALL_PERMS = [
   { value: 'admin:access', label: 'เข้าหน้า Admin Panel (จัดการผู้ใช้/role/หมวดหมู่/รายงาน)' },
@@ -97,18 +98,35 @@ export default function AdminRolesPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [modal, setModal] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<any>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const { data: roles, isLoading } = useQuery({ queryKey: ['roles'], queryFn: () => api.get('/roles').then(r => r.data) });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/roles/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['roles'] }),
-    onError: (e: any) => alert(e?.response?.data?.message || t('common.error')),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['roles'] }); setConfirmDelete(null); },
+    onError: (e: any) => { setDeleteError(e?.response?.data?.message || t('common.error')); setConfirmDelete(null); },
   });
 
   return (
     <div>
       {modal !== null && <RoleModal role={modal} onClose={() => setModal(null)} />}
+      {confirmDelete && (
+        <ConfirmDialog
+          title={t('common.confirm_delete')}
+          message={t('admin.roles.confirm_delete', { name: confirmDelete.name })}
+          onConfirm={() => deleteMutation.mutate(confirmDelete.id)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {deleteError && (
+        <div className="alert alert-error" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{deleteError}</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setDeleteError('')}><X size={14} /></button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.roles.title')}</h1>
@@ -140,7 +158,7 @@ export default function AdminRolesPage() {
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setModal(r)}><Pencil size={13} /></button>
                   <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                    onClick={() => confirm(t('admin.roles.confirm_delete', { name: r.name })) && deleteMutation.mutate(r.id)}>
+                    onClick={() => setConfirmDelete(r)}>
                     <Trash2 size={13} />
                   </button>
                 </div>

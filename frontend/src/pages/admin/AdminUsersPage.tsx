@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 function UserModal({ user, roles, categories, onClose }: { user: any; roles: any[]; categories: any[]; onClose: () => void }) {
   const { t } = useTranslation();
@@ -98,6 +99,8 @@ export default function AdminUsersPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [modal, setModal] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<any>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const { data: users, isLoading } = useQuery({ queryKey: ['users'], queryFn: () => api.get('/users').then(r => r.data) });
   const { data: roles } = useQuery({ queryKey: ['roles'], queryFn: () => api.get('/roles').then(r => r.data) });
@@ -105,12 +108,28 @@ export default function AdminUsersPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/users/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setConfirmDelete(null); },
+    onError: (e: any) => { setDeleteError(e?.response?.data?.message || t('common.error')); setConfirmDelete(null); },
   });
 
   return (
     <div>
       {modal !== null && <UserModal user={modal} roles={roles || []} categories={categories || []} onClose={() => setModal(null)} />}
+      {confirmDelete && (
+        <ConfirmDialog
+          title={t('common.confirm_delete')}
+          message={t('admin.users.confirm_delete', { username: confirmDelete.username })}
+          onConfirm={() => deleteMutation.mutate(confirmDelete.id)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {deleteError && (
+        <div className="alert alert-error" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{deleteError}</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setDeleteError('')}><X size={14} /></button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.users.title')}</h1>
@@ -165,7 +184,7 @@ export default function AdminUsersPage() {
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     <button className="btn btn-ghost btn-sm" onClick={() => setModal(u)}><Pencil size={13} /></button>
                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                      onClick={() => confirm(t('admin.users.confirm_delete', { username: u.username })) && deleteMutation.mutate(u.id)}>
+                      onClick={() => setConfirmDelete(u)}>
                       <Trash2 size={13} />
                     </button>
                   </div>

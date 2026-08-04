@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 function CatModal({ cat, onClose }: { cat: any; onClose: () => void }) {
   const { t } = useTranslation();
@@ -63,17 +64,35 @@ export default function AdminCategoriesPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [modal, setModal] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<any>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const { data: categories, isLoading } = useQuery({ queryKey: ['categories'], queryFn: () => api.get('/categories').then(r => r.data) });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/categories/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setConfirmDelete(null); },
+    onError: (e: any) => { setDeleteError(e?.response?.data?.message || t('common.error')); setConfirmDelete(null); },
   });
 
   return (
     <div>
       {modal !== null && <CatModal cat={modal} onClose={() => setModal(null)} />}
+      {confirmDelete && (
+        <ConfirmDialog
+          title={t('common.confirm_delete')}
+          message={t('admin.categories.confirm_delete', { name: confirmDelete.name })}
+          onConfirm={() => deleteMutation.mutate(confirmDelete.id)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {deleteError && (
+        <div className="alert alert-error" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{deleteError}</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setDeleteError('')}><X size={14} /></button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.categories.title')}</h1>
@@ -106,7 +125,7 @@ export default function AdminCategoriesPage() {
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     <button className="btn btn-ghost btn-sm" onClick={() => setModal(c)}><Pencil size={13} /></button>
                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                      onClick={() => confirm(t('admin.categories.confirm_delete', { name: c.name })) && deleteMutation.mutate(c.id)}>
+                      onClick={() => setConfirmDelete(c)}>
                       <Trash2 size={13} />
                     </button>
                   </div>

@@ -1,6 +1,6 @@
 {
   "name": "it-guide-backend",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Staff Guide Knowledge Base API",
   "scripts": {
     "build": "nest build",

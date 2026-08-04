@@ -3,13 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, X } from 'lucide-react';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 export default function AdminArticlesPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<{ id: number; title: string } | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-articles', page, search],
@@ -18,15 +21,28 @@ export default function AdminArticlesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.delete(`/articles/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-articles'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-articles'] }); setConfirmDelete(null); },
+    onError: (e: any) => { setDeleteError(e?.response?.data?.message || t('common.error')); setConfirmDelete(null); },
   });
-
-  const confirmDelete = (id: number, title: string) => {
-    if (confirm(t('admin.articles.confirm_delete', { title }))) deleteMutation.mutate(id);
-  };
 
   return (
     <div>
+      {confirmDelete && (
+        <ConfirmDialog
+          title={t('common.confirm_delete')}
+          message={t('admin.articles.confirm_delete', { title: confirmDelete.title })}
+          onConfirm={() => deleteMutation.mutate(confirmDelete.id)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {deleteError && (
+        <div className="alert alert-error" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{deleteError}</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setDeleteError('')}><X size={14} /></button>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('admin.articles.title')}</h1>
         <input className="input" style={{ width: 200 }} placeholder={t('admin.articles.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} />
@@ -64,7 +80,7 @@ export default function AdminArticlesPage() {
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                     <Link to={`/articles/${a.slug}`} className="btn btn-ghost btn-sm" title={t('common.edit')}><Eye size={13} /></Link>
                     <Link to={`/articles/${a.id}/edit`} className="btn btn-ghost btn-sm" title={t('common.edit')}><Pencil size={13} /></Link>
-                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => confirmDelete(a.id, a.title)}><Trash2 size={13} /></button>
+                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setConfirmDelete({ id: a.id, title: a.title })}><Trash2 size={13} /></button>
                   </div>
                 </td>
               </tr>
