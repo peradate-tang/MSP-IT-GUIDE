@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from './user.entity';
+import { Article } from '../articles/article.entity';
 import { RolesService } from '../roles/roles.service';
 import { CategoriesService } from '../categories/categories.service';
 
@@ -11,6 +12,8 @@ export class UsersService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Article)
+    private articlesRepository: Repository<Article>,
     private rolesService: RolesService,
     private categoriesService: CategoriesService,
   ) {}
@@ -96,6 +99,16 @@ export class UsersService implements OnModuleInit {
 
   async remove(id: number): Promise<void> {
     await this.findOne(id);
-    await this.usersRepository.delete(id);
+
+    // บทความคือความรู้ของแผนก ไม่ใช่ของส่วนตัวคนเขียน — ลบ user ได้โดยไม่ต้องลบ/ย้ายบทความก่อน
+    // แค่ตัดชื่อผู้เขียนออกจากบทความที่เคยสร้างไว้ (เนื้อหายังอยู่ครบ แค่ไม่มีชื่อผู้เขียนแสดง)
+    await this.articlesRepository.update({ authorId: id }, { authorId: null as any });
+
+    try {
+      await this.usersRepository.delete(id);
+    } catch {
+      // เผื่อกรณีมีข้อมูลอื่นอ้างอิงถึง user นี้อยู่ที่เราตรวจไม่ครอบคลุม กันไม่ให้ error ดิบๆ จาก DB หลุดออกไป
+      throw new InternalServerErrorException('ไม่สามารถลบผู้ใช้นี้ได้ เนื่องจากยังมีข้อมูลอื่นในระบบอ้างอิงถึงผู้ใช้นี้อยู่');
+    }
   }
 }

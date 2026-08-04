@@ -118,7 +118,7 @@ export default function AdminUsersPage() {
       {confirmDelete && (
         <ConfirmDialog
           title={t('common.confirm_delete')}
-          message={t('admin.users.confirm_delete', { username: confirmDelete.username })}
+          message={`${t('admin.users.confirm_delete', { username: confirmDelete.username })} (บทความที่ผู้ใช้นี้เคยสร้างไว้จะยังอยู่ครบ แค่จะไม่มีชื่อผู้เขียนแสดง)`}
           onConfirm={() => deleteMutation.mutate(confirmDelete.id)}
           onCancel={() => setConfirmDelete(null)}
         />

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './category.entity';
@@ -95,6 +95,10 @@ export class CategoriesService implements OnModuleInit {
         `ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากยังมีบทความ ${articlesInCat} บทความอยู่ในหมวดนี้ กรุณาย้ายหรือลบบทความเหล่านั้นก่อน`,
       );
     }
-    await this.categoriesRepository.delete(id);
+    try {
+      await this.categoriesRepository.delete(id);
+    } catch {
+      throw new InternalServerErrorException('ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากยังมีข้อมูลอื่นในระบบอ้างอิงถึงหมวดหมู่นี้อยู่');
+    }
   }
 }

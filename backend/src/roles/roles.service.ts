@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './role.entity';
@@ -58,6 +58,10 @@ export class RolesService implements OnModuleInit {
         `ไม่สามารถลบ Role นี้ได้ เนื่องจากมีผู้ใช้งาน ${usersWithRole} คนกำลังใช้งาน Role นี้อยู่ กรุณาเปลี่ยน Role ของผู้ใช้เหล่านั้นก่อน`,
       );
     }
-    await this.rolesRepository.delete(id);
+    try {
+      await this.rolesRepository.delete(id);
+    } catch {
+      throw new InternalServerErrorException('ไม่สามารถลบ Role นี้ได้ เนื่องจากยังมีข้อมูลอื่นในระบบอ้างอิงถึง Role นี้อยู่');
+    }
   }
 }
