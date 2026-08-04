@@ -22,15 +22,30 @@ export default function AdminActivityLogPage() {
   const [page, setPage] = useState(1);
   const [entityType, setEntityType] = useState('');
   const [action, setAction] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['activity-log', page, entityType, action],
-    queryFn: () => api.get('/activity-log', { params: { page, limit: 30, entityType: entityType || undefined, action: action || undefined } }).then(r => r.data),
+    queryKey: ['activity-log', page, entityType, action, from, to],
+    queryFn: () => api.get('/activity-log', {
+      params: { page, limit: 30, entityType: entityType || undefined, action: action || undefined, from: from || undefined, to: to || undefined },
+    }).then(r => r.data),
   });
+
+  const setPreset = (days: number) => {
+    const today = new Date();
+    const start = new Date();
+    start.setDate(today.getDate() - (days - 1));
+    setFrom(start.toISOString().slice(0, 10));
+    setTo(today.toISOString().slice(0, 10));
+    setPage(1);
+  };
+
+  const clearDates = () => { setFrom(''); setTo(''); setPage(1); };
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <History size={20} style={{ color: 'var(--accent)' }} />
         <h1 style={{ flex: 1, fontSize: '1.1rem', fontWeight: 700 }}>{t('nav.admin_activity_log')}</h1>
         <select className="input" style={{ width: 160 }} value={entityType} onChange={e => { setEntityType(e.target.value); setPage(1); }}>
@@ -46,6 +61,25 @@ export default function AdminActivityLogPage() {
           <option value="update">แก้ไข</option>
           <option value="delete">ลบ</option>
         </select>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div className="form-group" style={{ gap: 4 }}>
+          <label className="form-label" style={{ fontSize: '0.7rem' }}>ตั้งแต่วันที่</label>
+          <input type="date" className="input" style={{ width: 160 }} value={from} max={to || undefined}
+            onChange={e => { setFrom(e.target.value); setPage(1); }} />
+        </div>
+        <div className="form-group" style={{ gap: 4 }}>
+          <label className="form-label" style={{ fontSize: '0.7rem' }}>ถึงวันที่</label>
+          <input type="date" className="input" style={{ width: 160 }} value={to} min={from || undefined}
+            onChange={e => { setTo(e.target.value); setPage(1); }} />
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignSelf: 'flex-end' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setPreset(1)}>วันนี้</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setPreset(7)}>7 วัน</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setPreset(30)}>30 วัน</button>
+          {(from || to) && <button className="btn btn-ghost btn-sm" onClick={clearDates}>ล้างวันที่</button>}
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>

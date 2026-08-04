@@ -16,12 +16,16 @@ export class ActivityLogController {
     @Query('limit') limit?: string,
     @Query('entityType') entityType?: string,
     @Query('action') action?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
     return this.activityLogService.findAll({
       page: page ? +page : 1,
       limit: limit ? Math.min(+limit, 100) : 30,
       entityType,
       action,
+      from,
+      to,
     });
   }
 }
