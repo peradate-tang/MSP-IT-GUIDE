@@ -139,9 +139,15 @@ export class ArticlesService {
     const { search, categoryId, status, page = 1, limit = 10, isAdmin, isEditor, departmentCategoryId } = query;
     const baseWhere: any = {};
     if (status) baseWhere.status = status;
-    // Editor ที่ผูกแผนก (departmentCategoryId) → เห็นเฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
-    // (ห้าม categoryId ที่ส่งมาเองใน query bypass ข้อจำกัดนี้)
-    if (!isAdmin && isEditor && departmentCategoryId != null) {
+
+    // ข้อจำกัดแผนกใช้ตอน "จัดการ" บทความ (เห็น draft/ทุกสถานะ) เท่านั้น — ไม่ใช่ตอนอ่านบทความที่เผยแพร่แล้ว
+    // ทุกคน (รวมถึง editor แผนกอื่น) ต้องอ่านบทความที่เผยแพร่แล้วของทุกแผนกได้ปกติ
+    // แก้ไข/ลบ ถูกจำกัดแยกต่างหากอยู่แล้วใน update()/remove()/create()
+    const isManagementView = status !== 'published';
+
+    if (!isAdmin && isEditor && isManagementView && departmentCategoryId != null) {
+      // Editor ที่ผูกแผนก (departmentCategoryId) → ตอนดูเพื่อจัดการ เห็นเฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
+      // (ห้าม categoryId ที่ส่งมาเองใน query bypass ข้อจำกัดนี้)
       baseWhere.categoryId = categoryId && categoryId !== departmentCategoryId ? -1 : departmentCategoryId;
     } else {
       if (categoryId) baseWhere.categoryId = categoryId;
