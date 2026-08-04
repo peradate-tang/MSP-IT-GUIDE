@@ -66,6 +66,7 @@ export class ArticlesController {
     return this.articlesService.create(body, req.user.sub, {
       isAdmin,
       departmentCategoryId: req.user.departmentCategoryId,
+      username: req.user.username,
     });
   }
 
@@ -74,7 +75,12 @@ export class ArticlesController {
   @RequireRole('admin', 'editor', 'articles:write')
   update(@Param('id') id: string, @Body() body: UpdateArticleDto, @Request() req) {
     const isAdmin = req.user.role === 'admin' || req.user.permissions?.includes('*');
-    return this.articlesService.update(+id, body, { isAdmin, departmentCategoryId: req.user.departmentCategoryId });
+    return this.articlesService.update(+id, body, {
+      isAdmin,
+      departmentCategoryId: req.user.departmentCategoryId,
+      userId: req.user.sub,
+      username: req.user.username,
+    });
   }
 
   @Delete(':id')
@@ -82,6 +88,11 @@ export class ArticlesController {
   @RequireRole('admin', 'editor', 'articles:write', 'articles:delete')
   remove(@Param('id') id: string, @Request() req) {
     const isAdmin = req.user.role === 'admin' || req.user.permissions?.includes('*');
-    return this.articlesService.remove(+id, { isAdmin, departmentCategoryId: req.user.departmentCategoryId });
+    return this.articlesService.remove(+id, {
+      isAdmin,
+      departmentCategoryId: req.user.departmentCategoryId,
+      userId: req.user.sub,
+      username: req.user.username,
+    });
   }
 }

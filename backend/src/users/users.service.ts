@@ -6,6 +6,7 @@ import { User } from './user.entity';
 import { Article } from '../articles/article.entity';
 import { RolesService } from '../roles/roles.service';
 import { CategoriesService } from '../categories/categories.service';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -16,6 +17,7 @@ export class UsersService implements OnModuleInit {
     private articlesRepository: Repository<Article>,
     private rolesService: RolesService,
     private categoriesService: CategoriesService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async onModuleInit() {
@@ -58,6 +60,31 @@ export class UsersService implements OnModuleInit {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  async findByUsernameOrEmail(identifier: string): Promise<User> {
+    return this.usersRepository.findOne({ where: [{ username: identifier }, { email: identifier }] });
+  }
+
+  async setResetToken(userId: number, tokenHash: string, expiresAt: Date): Promise<void> {
+    await this.usersRepository.update(userId, { resetTokenHash: tokenHash, resetTokenExpiresAt: expiresAt });
+  }
+
+  async findByResetTokenHash(tokenHash: string): Promise<User | null> {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect(['user.resetTokenHash', 'user.resetTokenExpiresAt'])
+      .where('user.resetTokenHash = :tokenHash', { tokenHash })
+      .getOne();
+  }
+
+  async resetPasswordWithToken(userId: number, newPassword: string): Promise<void> {
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.update(userId, {
+      password: hashed,
+      resetTokenHash: null as any,
+      resetTokenExpiresAt: null as any,
+    });
+  }
+
   // ตรวจว่า departmentCategoryId ที่ส่งมามีอยู่จริง กัน FK error ที่อ่านยากตอนบันทึก
   private async assertCategoryExists(categoryId?: number | null): Promise<void> {
     if (categoryId == null) return;
@@ -75,7 +102,7 @@ export class UsersService implements OnModuleInit {
     fullName?: string;
     departmentCategoryId?: number;
     roleId?: number;
-  }): Promise<User> {
+  }, actor?: { userId?: number; username?: string }): Promise<User> {
     const exists = await this.usersRepository.findOne({ where: [{ username: data.username }, { email: data.email }] });
     if (exists) throw new ConflictException('Username or email already exists');
     await this.assertCategoryExists(data.departmentCategoryId);
@@ -83,22 +110,28 @@ export class UsersService implements OnModuleInit {
     const hashed = await bcrypt.hash(data.password, 10);
     const user = this.usersRepository.create({ ...data, password: hashed });
     const saved = await this.usersRepository.save(user);
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'create', entityType: 'user', entityId: saved.id, entityLabel: saved.username });
     // ดึงกลับด้วย findOne เพื่อไม่ให้ password hash หลุดไปกับ response
     return this.findOne(saved.id);
   }
 
-  async update(id: number, data: Partial<{ fullName: string; email: string; departmentCategoryId: number; isActive: boolean; roleId: number; password: string }>): Promise<User> {
-    await this.findOne(id);
+  async update(
+    id: number,
+    data: Partial<{ fullName: string; email: string; departmentCategoryId: number; isActive: boolean; roleId: number; password: string }>,
+    actor?: { userId?: number; username?: string },
+  ): Promise<User> {
+    const existing = await this.findOne(id);
     await this.assertCategoryExists(data.departmentCategoryId);
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
     await this.usersRepository.update(id, data);
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'update', entityType: 'user', entityId: id, entityLabel: existing.username });
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.findOne(id);
+  async remove(id: number, actor?: { userId?: number; username?: string }): Promise<void> {
+    const user = await this.findOne(id);
 
     // บทความคือความรู้ของแผนก ไม่ใช่ของส่วนตัวคนเขียน — ลบ user ได้โดยไม่ต้องลบ/ย้ายบทความก่อน
     // แค่ตัดชื่อผู้เขียนออกจากบทความที่เคยสร้างไว้ (เนื้อหายังอยู่ครบ แค่ไม่มีชื่อผู้เขียนแสดง)
@@ -110,5 +143,6 @@ export class UsersService implements OnModuleInit {
       // เผื่อกรณีมีข้อมูลอื่นอ้างอิงถึง user นี้อยู่ที่เราตรวจไม่ครอบคลุม กันไม่ให้ error ดิบๆ จาก DB หลุดออกไป
       throw new InternalServerErrorException('ไม่สามารถลบผู้ใช้นี้ได้ เนื่องจากยังมีข้อมูลอื่นในระบบอ้างอิงถึงผู้ใช้นี้อยู่');
     }
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'delete', entityType: 'user', entityId: id, entityLabel: user.username });
   }
 }

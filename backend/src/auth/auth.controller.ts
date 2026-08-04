@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -18,5 +19,17 @@ export class AuthController {
   @Get('me')
   me(@Request() req) {
     return this.authService.me(req.user.sub);
+  }
+
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 300000 } }) // 3 ครั้ง/5 นาที ต่อ IP กันสแปมส่งอีเมล
+  forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.forgotPassword(body.identifier);
+  }
+
+  @Post('reset-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body.token, body.newPassword);
   }
 }

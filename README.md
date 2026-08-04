@@ -36,6 +36,13 @@ JWT_SECRET=your-random-secret-string-here
 NODE_ENV=production
 FRONTEND_URL=https://your-frontend.up.railway.app
 PORT=3001
+
+# (ทางเลือก) ตั้งค่านี้เพื่อเปิดใช้งานฟีเจอร์ "ลืมรหัสผ่าน" — ถ้าไม่ตั้ง ระบบยังรันได้ปกติ แค่ฟีเจอร์นี้ใช้ไม่ได้
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=Staff Guide <no-reply@yourhotel.com>
 ```
 
 4. Railway จะ build และ deploy อัตโนมัติ

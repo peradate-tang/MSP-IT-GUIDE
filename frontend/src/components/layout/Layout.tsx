@@ -5,7 +5,7 @@ import { useAuthStore } from '../../lib/authStore';
 import { canAccessAdminPanel, isEditorLike } from '../../lib/permissions';
 import {
   BookOpen, Home, Users, Shield, Folder, ConciergeBell,
-  FileText, LogOut, Menu, X, ChevronDown, BarChart2, Settings, Globe
+  FileText, LogOut, Menu, X, ChevronDown, BarChart2, Settings, Globe, History
 } from 'lucide-react';
 import i18n from '../../lib/i18n';
 
@@ -111,6 +111,7 @@ export default function Layout() {
                   <NavItem to="/admin/users" icon={<Users size={15} />} label={t('nav.admin_users')} active={location.pathname === '/admin/users'} />
                   <NavItem to="/admin/roles" icon={<Shield size={15} />} label={t('nav.admin_roles')} active={location.pathname === '/admin/roles'} />
                   <NavItem to="/admin/report" icon={<BarChart2 size={15} />} label={t('nav.admin_report')} active={location.pathname === '/admin/report'} />
+                  <NavItem to="/admin/activity-log" icon={<History size={15} />} label={t('nav.admin_activity_log')} active={location.pathname === '/admin/activity-log'} />
                 </div>
               )}
             </div>

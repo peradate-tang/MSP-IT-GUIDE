@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Category } from './category.entity';
 import { User } from '../users/user.entity';
 import { Article } from '../articles/article.entity';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class CategoriesService implements OnModuleInit {
@@ -14,6 +15,7 @@ export class CategoriesService implements OnModuleInit {
     private usersRepository: Repository<User>,
     @InjectRepository(Article)
     private articlesRepository: Repository<Article>,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async onModuleInit() {
@@ -68,19 +70,23 @@ export class CategoriesService implements OnModuleInit {
     return cat;
   }
 
-  async create(data: Partial<Category>): Promise<Category> {
+  async create(data: Partial<Category>, actor?: { userId?: number; username?: string }): Promise<Category> {
     const cat = this.categoriesRepository.create(data);
-    return this.categoriesRepository.save(cat);
+    const saved = await this.categoriesRepository.save(cat);
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'create', entityType: 'category', entityId: saved.id, entityLabel: saved.name });
+    return saved;
   }
 
-  async update(id: number, data: Partial<Category>): Promise<Category> {
+  async update(id: number, data: Partial<Category>, actor?: { userId?: number; username?: string }): Promise<Category> {
     await this.findOne(id);
     await this.categoriesRepository.update(id, data);
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'update', entityType: 'category', entityId: updated.id, entityLabel: updated.name });
+    return updated;
   }
 
-  async remove(id: number): Promise<void> {
-    await this.findOne(id);
+  async remove(id: number, actor?: { userId?: number; username?: string }): Promise<void> {
+    const category = await this.findOne(id);
     const [usersInDept, articlesInCat] = await Promise.all([
       this.usersRepository.count({ where: { departmentCategoryId: id } }),
       this.articlesRepository.count({ where: { categoryId: id } }),
@@ -100,5 +106,6 @@ export class CategoriesService implements OnModuleInit {
     } catch {
       throw new InternalServerErrorException('ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากยังมีข้อมูลอื่นในระบบอ้างอิงถึงหมวดหมู่นี้อยู่');
     }
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'delete', entityType: 'category', entityId: id, entityLabel: category.name });
   }
 }

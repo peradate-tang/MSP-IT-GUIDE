@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Article, ArticleStatus } from './article.entity';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -62,6 +63,7 @@ export class ArticlesService {
   constructor(
     @InjectRepository(Article)
     private articlesRepository: Repository<Article>,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async onModuleInit() {
@@ -208,7 +210,7 @@ export class ArticlesService {
   async create(
     data: Partial<Article> & { title: string; content: string },
     authorId: number,
-    author?: { isAdmin?: boolean; departmentCategoryId?: number | null },
+    author?: { isAdmin?: boolean; departmentCategoryId?: number | null; username?: string },
   ): Promise<Article> {
     let categoryId = data.categoryId;
     if (!author?.isAdmin) {
@@ -226,10 +228,25 @@ export class ArticlesService {
       slug,
       authorId,
     } as any);
-    return this.articlesRepository.save(entity) as unknown as Article;
+    const saved = await this.articlesRepository.save(entity) as unknown as Article;
+
+    this.activityLogService.log({
+      userId: authorId,
+      username: author?.username,
+      action: 'create',
+      entityType: 'article',
+      entityId: saved.id,
+      entityLabel: saved.title,
+    });
+
+    return saved;
   }
 
-  async update(id: number, data: Partial<Article>, user?: { isAdmin?: boolean; departmentCategoryId?: number | null }): Promise<Article> {
+  async update(
+    id: number,
+    data: Partial<Article>,
+    user?: { isAdmin?: boolean; departmentCategoryId?: number | null; userId?: number; username?: string },
+  ): Promise<Article> {
     const article = await this.findOne(id);
     if (!user?.isAdmin) {
       // Editor แก้ไขได้เฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
@@ -259,10 +276,19 @@ export class ArticlesService {
       }
     }
 
+    this.activityLogService.log({
+      userId: user?.userId,
+      username: user?.username,
+      action: 'update',
+      entityType: 'article',
+      entityId: updated.id,
+      entityLabel: updated.title,
+    });
+
     return updated;
   }
 
-  async remove(id: number, user?: { isAdmin?: boolean; departmentCategoryId?: number | null }): Promise<void> {
+  async remove(id: number, user?: { isAdmin?: boolean; departmentCategoryId?: number | null; userId?: number; username?: string }): Promise<void> {
     const article = await this.findOne(id);
     if (!user?.isAdmin) {
       // Editor ลบได้เฉพาะบทความในหมวดของแผนกตัวเองเท่านั้น
@@ -272,5 +298,14 @@ export class ArticlesService {
     }
     await this.articlesRepository.delete(id);
     await deleteCloudinaryAssets(article.content || '');
+
+    this.activityLogService.log({
+      userId: user?.userId,
+      username: user?.username,
+      action: 'delete',
+      entityType: 'article',
+      entityId: id,
+      entityLabel: article.title,
+    });
   }
 }

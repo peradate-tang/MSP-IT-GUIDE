@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './role.entity';
 import { User } from '../users/user.entity';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class RolesService implements OnModuleInit {
@@ -11,6 +12,7 @@ export class RolesService implements OnModuleInit {
     private rolesRepository: Repository<Role>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async onModuleInit() {
@@ -39,19 +41,23 @@ export class RolesService implements OnModuleInit {
     return this.rolesRepository.findOne({ where: { name } });
   }
 
-  async create(data: Partial<Role>): Promise<Role> {
+  async create(data: Partial<Role>, actor?: { userId?: number; username?: string }): Promise<Role> {
     const role = this.rolesRepository.create(data);
-    return this.rolesRepository.save(role);
+    const saved = await this.rolesRepository.save(role);
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'create', entityType: 'role', entityId: saved.id, entityLabel: saved.name });
+    return saved;
   }
 
-  async update(id: number, data: Partial<Role>): Promise<Role> {
+  async update(id: number, data: Partial<Role>, actor?: { userId?: number; username?: string }): Promise<Role> {
     await this.findOne(id);
     await this.rolesRepository.update(id, data);
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'update', entityType: 'role', entityId: updated.id, entityLabel: updated.name });
+    return updated;
   }
 
-  async remove(id: number): Promise<void> {
-    await this.findOne(id);
+  async remove(id: number, actor?: { userId?: number; username?: string }): Promise<void> {
+    const role = await this.findOne(id);
     const usersWithRole = await this.usersRepository.count({ where: { roleId: id } });
     if (usersWithRole > 0) {
       throw new ConflictException(
@@ -63,5 +69,6 @@ export class RolesService implements OnModuleInit {
     } catch {
       throw new InternalServerErrorException('ไม่สามารถลบ Role นี้ได้ เนื่องจากยังมีข้อมูลอื่นในระบบอ้างอิงถึง Role นี้อยู่');
     }
+    this.activityLogService.log({ userId: actor?.userId, username: actor?.username, action: 'delete', entityType: 'role', entityId: id, entityLabel: role.name });
   }
 }

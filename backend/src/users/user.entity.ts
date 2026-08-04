@@ -34,6 +34,13 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  // สำหรับ flow "ลืมรหัสผ่าน" — เก็บ token แบบ hash (ไม่เก็บ token ดิบ) + วันหมดอายุ
+  @Column({ nullable: true, select: false })
+  resetTokenHash: string;
+
+  @Column({ type: 'datetime', nullable: true, select: false })
+  resetTokenExpiresAt: Date;
+
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
   @JoinColumn({ name: 'roleId' })
   role: Role;

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -22,21 +22,21 @@ export class CategoriesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'admin:access')
-  create(@Body() body: CreateCategoryDto) {
-    return this.categoriesService.create(body);
+  create(@Body() body: CreateCategoryDto, @Request() req) {
+    return this.categoriesService.create(body, { userId: req.user.sub, username: req.user.username });
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'admin:access')
-  update(@Param('id') id: string, @Body() body: UpdateCategoryDto) {
-    return this.categoriesService.update(+id, body);
+  update(@Param('id') id: string, @Body() body: UpdateCategoryDto, @Request() req) {
+    return this.categoriesService.update(+id, body, { userId: req.user.sub, username: req.user.username });
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @RequireRole('admin', 'admin:access')
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(+id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.categoriesService.remove(+id, { userId: req.user.sub, username: req.user.username });
   }
 }

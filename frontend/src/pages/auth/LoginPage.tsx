@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
 import { Lock, User, ConciergeBell } from 'lucide-react';
@@ -85,6 +85,9 @@ export default function LoginPage() {
                   placeholder={t('login.password_placeholder')}
                   required
                 />
+              </div>
+              <div style={{ textAlign: 'right', marginTop: 4 }}>
+                <Link to="/forgot-password" style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>ลืมรหัสผ่าน?</Link>
               </div>
             </div>
 

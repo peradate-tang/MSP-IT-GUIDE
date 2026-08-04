@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Printer, BarChart2, Users, FileText, FolderOpen, Clock } from 'lucide-react';
+import { Printer, BarChart2, Users, FileText, FolderOpen, Clock, TrendingUp, EyeOff } from 'lucide-react';
 import api from '../../lib/api';
 
 function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
@@ -61,6 +61,12 @@ export default function AdminReportPage() {
     .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime())
     .slice(0, 10);
 
+  const publishedArticles = allArticles.filter(a => a.status === 'published');
+  const topViewedArticles = [...publishedArticles]
+    .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+    .slice(0, 8);
+  const neverViewedArticles = publishedArticles.filter(a => !a.viewCount || a.viewCount === 0);
+
   const printDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   return (
@@ -96,6 +102,56 @@ export default function AdminReportPage() {
           <StatCard label={t('admin.report.archived')} value={archived} sub="archived" />
           <StatCard label={t('admin.report.categories')} value={allCategories.length} />
           <StatCard label={t('admin.report.users')} value={allUsers.length} />
+        </div>
+      </section>
+
+      {/* Section 1.5: บทความยอดนิยม / ไม่มีคนอ่านเลย */}
+      <section style={{ marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-2)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <TrendingUp size={15} /> บทความยอดนิยม (อ่านมากที่สุด)
+            </h2>
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              {topViewedArticles.length === 0 ? (
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontSize: '0.875rem' }}>{t('common.noData')}</div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <tbody>
+                    {topViewedArticles.map((a, i) => (
+                      <tr key={a.id} style={{ borderBottom: i < topViewedArticles.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                        <td style={{ padding: '9px 14px', color: 'var(--text-3)', width: 24 }}>{i + 1}</td>
+                        <td style={{ padding: '9px 14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 1 }}>{a.title}</td>
+                        <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--accent)', whiteSpace: 'nowrap' }}>{a.viewCount || 0} ครั้ง</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-2)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <EyeOff size={15} /> บทความที่ยังไม่มีคนอ่านเลย ({neverViewedArticles.length})
+            </h2>
+            <div className="card" style={{ padding: 0, overflow: 'hidden', maxHeight: 280, overflowY: 'auto' }}>
+              {neverViewedArticles.length === 0 ? (
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontSize: '0.875rem' }}>ทุกบทความมีคนอ่านแล้ว 🎉</div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <tbody>
+                    {neverViewedArticles.map((a, i) => (
+                      <tr key={a.id} style={{ borderBottom: i < neverViewedArticles.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                        <td style={{ padding: '9px 14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 1 }}>{a.title}</td>
+                        <td style={{ padding: '9px 14px', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{a.category?.icon} {a.category?.name || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 

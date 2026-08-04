@@ -4,6 +4,8 @@ import { useAuthStore } from './lib/authStore';
 import { canAccessAdminPanel, isEditorLike } from './lib/permissions';
 import Layout from './components/layout/Layout';
 import LoginPage from './pages/auth/LoginPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import ArticleListPage from './pages/articles/ArticleListPage';
 import ArticleViewPage from './pages/articles/ArticleViewPage';
@@ -13,6 +15,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminRolesPage from './pages/admin/AdminRolesPage';
 import AdminArticlesPage from './pages/admin/AdminArticlesPage';
 import AdminReportPage from './pages/admin/AdminReportPage';
+import AdminActivityLogPage from './pages/admin/AdminActivityLogPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -45,6 +48,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="articles" element={<ArticleListPage />} />
@@ -66,6 +71,7 @@ export default function App() {
           <Route path="admin/users" element={<RequireAuth><RequireAdmin><AdminUsersPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/roles" element={<RequireAuth><RequireAdmin><AdminRolesPage /></RequireAdmin></RequireAuth>} />
           <Route path="admin/report" element={<RequireAuth><RequireAdmin><AdminReportPage /></RequireAdmin></RequireAuth>} />
+          <Route path="admin/activity-log" element={<RequireAuth><RequireAdmin><AdminActivityLogPage /></RequireAdmin></RequireAuth>} />
         </Route>
       </Routes>
     </BrowserRouter>
