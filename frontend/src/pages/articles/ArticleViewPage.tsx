@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { useAuthStore } from '../../lib/authStore';
-import { ArrowLeft, Clock, Eye, Pencil, Tag } from 'lucide-react';
+import { ArrowLeft, Clock, Eye, Pencil, Tag, Printer, ConciergeBell } from 'lucide-react';
 
 export default function ArticleViewPage() {
   const { t } = useTranslation();
@@ -33,11 +33,19 @@ export default function ArticleViewPage() {
   );
 
   return (
-    <div style={{ maxWidth: 780, margin: '0 auto' }}>
+    <div style={{ maxWidth: 780, margin: '0 auto' }} className="article-print-area">
       {/* Back */}
-      <button className="btn btn-ghost btn-sm" style={{ marginBottom: 20 }} onClick={() => navigate(-1)}>
+      <button className="btn btn-ghost btn-sm no-print" style={{ marginBottom: 20 }} onClick={() => navigate(-1)}>
         <ArrowLeft size={14} /> {t('common.back')}
       </button>
+
+      {/* หัวกระดาษที่แสดงเฉพาะตอนพิมพ์ — แทนที่ sidebar/header ที่ถูกซ่อนไปตอนพิมพ์ */}
+      <div className="print-only print-letterhead">
+        <div className="print-letterhead-brand">
+          <ConciergeBell size={18} /> Staff Guide — Knowledge Base
+        </div>
+        <div className="print-letterhead-date">พิมพ์เมื่อ {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+      </div>
 
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
@@ -46,11 +54,16 @@ export default function ArticleViewPage() {
             {article.category && <span className="tag">{article.category.icon} {article.category.name}</span>}
             <span className={`badge badge-${article.status}`}>{article.status}</span>
           </div>
-          {canEdit && (
-            <Link to={`/articles/${article.id}/edit`} className="btn btn-secondary btn-sm">
-              <Pencil size={13} /> {t('common.edit')}
-            </Link>
-          )}
+          <div className="no-print" style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => window.print()}>
+              <Printer size={13} /> พิมพ์
+            </button>
+            {canEdit && (
+              <Link to={`/articles/${article.id}/edit`} className="btn btn-secondary btn-sm">
+                <Pencil size={13} /> {t('common.edit')}
+              </Link>
+            )}
+          </div>
         </div>
 
         <h1 style={{ fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.3, marginBottom: 16 }}>
@@ -64,7 +77,7 @@ export default function ArticleViewPage() {
         <div style={{ display: 'flex', gap: 16, fontSize: '0.8rem', color: 'var(--text-3)', flexWrap: 'wrap' }}>
           {article.author && <span>โดย <strong style={{ color: 'var(--text-2)' }}>{article.author.fullName || article.author.username}</strong></span>}
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> {new Date(article.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {article.viewCount} {t('articles.views')}</span>
+          <span className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {article.viewCount} {t('articles.views')}</span>
         </div>
 
         {Array.isArray(article.tags) && article.tags.length > 0 && (
@@ -81,8 +94,13 @@ export default function ArticleViewPage() {
       {/* Content */}
       <div className="markdown-body" dangerouslySetInnerHTML={{ __html: article.content }} />
 
+      {/* Print footer: แหล่งที่มา ให้ใครอ่านกระดาษที่พิมพ์แล้วย้อนกลับมาดูออนไลน์ได้ */}
+      <div className="print-only print-footer">
+        อ่านฉบับล่าสุดออนไลน์ได้ที่ {window.location.href}
+      </div>
+
       {/* Footer */}
-      <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
+      <div className="no-print" style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
         <Link to="/articles" className="btn btn-secondary">
           <ArrowLeft size={14} /> {t('articles.back_to_list')}
         </Link>

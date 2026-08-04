@@ -7,7 +7,7 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRole('admin')
+@RequireRole('admin', 'admin:access')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

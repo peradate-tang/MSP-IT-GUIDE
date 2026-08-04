@@ -4,7 +4,13 @@ import { useTranslation } from 'react-i18next';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 
-const ALL_PERMS = ['articles:write', 'articles:delete', 'categories:write', 'users:read'];
+const ALL_PERMS = [
+  { value: 'admin:access', label: 'เข้าหน้า Admin Panel (จัดการผู้ใช้/role/หมวดหมู่/รายงาน)' },
+  { value: 'articles:write', label: 'สร้าง/แก้ไขบทความ' },
+  { value: 'articles:delete', label: 'ลบบทความ' },
+  { value: 'categories:write', label: 'จัดการหมวดหมู่' },
+  { value: 'users:read', label: 'ดูรายชื่อผู้ใช้งาน' },
+];
 
 function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
   const { t } = useTranslation();
@@ -55,10 +61,15 @@ function RoleModal({ role, onClose }: { role: any; onClose: () => void }) {
                 />
                 <strong style={{ color: 'var(--accent)' }}>* — {t('admin.roles.all_permissions')}</strong>
               </label>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-3)', margin: '-4px 0 4px 24px', lineHeight: 1.6 }}>
+                ⚠️ ติ๊กนี้ = สิทธิ์เท่า admin ทุกอย่าง รวมถึงเข้าหน้า Admin Panel และแก้ไข/ลบบทความได้ทุกหมวดหมู่ (ข้ามข้อจำกัดแผนก)
+                ถ้าต้องการแค่ให้เข้าหน้า Admin ได้แต่ยังจำกัดตามแผนกอยู่ ให้ติ๊กเฉพาะ "เข้าหน้า Admin Panel" ด้านล่างแทน
+              </p>
               {!form.permissions.includes('*') && ALL_PERMS.map(p => (
-                <label key={p} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.permissions.includes(p)} onChange={() => togglePerm(p)} />
-                  <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-2)' }}>{p}</code>
+                <label key={p.value} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.permissions.includes(p.value)} onChange={() => togglePerm(p.value)} />
+                  <span>{p.label}</span>
+                  <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-3)', fontSize: '0.72rem' }}>{p.value}</code>
                 </label>
               ))}
             </div>

@@ -349,19 +349,64 @@ select.input { cursor: pointer; }
 .print-only { display: none; }
 
 @media print {
+  @page { margin: 1.6cm; }
+
   .no-print { display: none !important; }
   .print-only { display: block !important; }
 
-  body { background: #fff !important; color: #000 !important; }
+  body { background: #fff !important; color: #000 !important; font-size: 11.5pt; }
   :root {
-    --bg: #fff; --bg-2: #f5f5f5; --bg-3: #eee;
-    --border: #ccc; --text: #000; --text-2: #333; --text-3: #666;
+    --bg: #fff; --bg-2: #f5f5f5; --bg-3: #f2f2f2;
+    --border: #ccc; --text: #000; --text-2: #333; --text-3: #555;
     --accent: #8C6A22; --success: #16a34a; --warning: #ca8a04; --danger: #dc2626;
   }
 
   aside, header, .no-print { display: none !important; }
-  main { margin: 0 !important; padding: 0 !important; }
+  main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
   .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+
+  /* หัวกระดาษ/ท้ายกระดาษ เฉพาะตอนพิมพ์ — แทนที่ sidebar/navbar ที่ถูกซ่อนไป */
+  .print-letterhead {
+    display: flex !important;
+    align-items: center; justify-content: space-between;
+    padding-bottom: 10px; margin-bottom: 20px;
+    border-bottom: 2px solid #000;
+    font-size: 9.5pt; color: #333;
+  }
+  .print-letterhead-brand { display: flex; align-items: center; gap: 6px; font-weight: 700; color: #000; }
+  .print-footer {
+    margin-top: 32px; padding-top: 10px; border-top: 1px solid #999;
+    font-size: 8.5pt; color: #555; word-break: break-all;
+  }
+
+  h1, h2, h3, h4 { break-after: avoid; color: #000 !important; }
+  p, li { orphans: 3; widows: 3; }
+  table, pre, img, figure { break-inside: avoid; }
+  a { color: #000 !important; text-decoration: underline; }
+
+  /* ลิงก์ภายนอกในเนื้อหาบทความ: พิมพ์ URL ต่อท้ายให้เห็นชัดบนกระดาษ (ลิงก์กดไม่ได้เวลาพิมพ์) */
+  .markdown-body a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+    word-break: break-all;
+  }
+
+  /* โค้ด: พื้นดำเปลืองหมึกและอ่านยากบนกระดาษ เปลี่ยนเป็นกรอบขาว-ดำแทน */
+  .markdown-body pre {
+    background: #fff !important;
+    border: 1px solid #999 !important;
+  }
+  .markdown-body pre code {
+    color: #000 !important;
+  }
+  .markdown-body code {
+    background: #f2f2f2 !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+  }
+  .markdown-body img, .markdown-body video { box-shadow: none !important; max-width: 100% !important; }
+  .markdown-body blockquote { color: #333 !important; }
 
   table { page-break-inside: auto; }
   tr { page-break-inside: avoid; }

@@ -1,6 +1,8 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('../../package.json');
 
 @Controller('health')
 export class HealthController {
@@ -15,6 +17,7 @@ export class HealthController {
     }
     return {
       status: 'ok',
+      version: pkg.version,
       timestamp: new Date().toISOString(),
     };
   }

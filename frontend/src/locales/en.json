@@ -33,7 +33,7 @@
     "guest_hint": "Sign in to add or edit articles"
   },
   "login": {
-    "title": "IT Guide",
+    "title": "Staff Guide",
     "subtitle": "Knowledge Base System",
     "heading": "Sign in",
     "username": "Username",
@@ -46,9 +46,9 @@
     "default_hint": "default: admin / admin1234"
   },
   "home": {
-    "badge": "📖 IT Knowledge Base",
-    "hero_title": "Find the IT answers\nyou need",
-    "hero_desc": "Guides, how-to articles, and technical documentation for your IT team.",
+    "badge": "📖 Knowledge Base",
+    "hero_title": "Find the answers\nyou need",
+    "hero_desc": "Guides, how-to articles, and documentation for every department at the hotel.",
     "view_all": "View all articles",
     "categories": "Categories",
     "recent": "Recent articles",
@@ -170,7 +170,7 @@
       "col_title": "Title",
       "col_status": "Status",
       "col_updated": "Last Updated",
-      "print_header": "IT Guide — System Overview Report",
+      "print_header": "Staff Guide — System Overview Report",
       "print_date": "Generated: {{date}}"
     }
   }

@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 
-const DEV_FALLBACK_SECRET = 'itguide-secret-change-in-prod';
+const DEV_FALLBACK_SECRET = 'staffguide-secret-change-in-prod';
 
 /**
  * คืนค่า JWT secret จาก env

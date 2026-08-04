@@ -97,6 +97,9 @@ export default function LoginPage() {
             <div>{t('login.default_hint')}</div>
           </div>
         </div>
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>v{__APP_VERSION__}</span>
+        </div>
       </div>
     </div>
   );

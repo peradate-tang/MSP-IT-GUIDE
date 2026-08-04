@@ -1,6 +1,6 @@
-# IT Guide — Knowledge Base
+# Staff Guide — Knowledge Base
 
-ระบบ Knowledge Base สำหรับทีม IT พัฒนาด้วย NestJS + React + MySQL Deploy บน Railway
+ระบบ Knowledge Base สำหรับพนักงานทุกแผนกในโรงแรม (Front Office, Housekeeping, Engineer, F&B, IT, Security, HR, Finance, Sales & Marketing ฯลฯ) พัฒนาด้วย NestJS + React + MySQL Deploy บน Railway
 
 ---
 

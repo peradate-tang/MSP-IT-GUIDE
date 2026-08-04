@@ -33,7 +33,7 @@
     "guest_hint": "เข้าสู่ระบบเพื่อเพิ่ม/แก้ไขบทความ"
   },
   "login": {
-    "title": "IT Guide",
+    "title": "Staff Guide",
     "subtitle": "Knowledge Base System",
     "heading": "เข้าสู่ระบบ",
     "username": "ชื่อผู้ใช้",
@@ -46,9 +46,9 @@
     "default_hint": "default: admin / admin1234"
   },
   "home": {
-    "badge": "📖 IT Knowledge Base",
-    "hero_title": "ค้นหาคำตอบด้านไอที\nที่คุณต้องการ",
-    "hero_desc": "รวมคู่มือ, How-to guide, และเอกสารทางเทคนิคสำหรับทีม IT ของคุณ",
+    "badge": "📖 Knowledge Base",
+    "hero_title": "ค้นหาคำตอบ\nที่คุณต้องการ",
+    "hero_desc": "รวมคู่มือ, How-to guide และเอกสารการทำงานสำหรับทุกแผนกในโรงแรม",
     "view_all": "ดูบทความทั้งหมด",
     "categories": "หมวดหมู่",
     "recent": "บทความล่าสุด",
@@ -170,7 +170,7 @@
       "col_title": "ชื่อบทความ",
       "col_status": "สถานะ",
       "col_updated": "แก้ไขล่าสุด",
-      "print_header": "IT Guide — รายงานภาพรวมระบบ",
+      "print_header": "Staff Guide — รายงานภาพรวมระบบ",
       "print_date": "สร้างเมื่อ: {{date}}"
     }
   }

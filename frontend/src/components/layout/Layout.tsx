@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../lib/authStore';
+import { canAccessAdminPanel, isEditorLike } from '../../lib/permissions';
 import {
   BookOpen, Home, Users, Shield, Folder, ConciergeBell,
   FileText, LogOut, Menu, X, ChevronDown, BarChart2, Settings, Globe
@@ -42,8 +43,8 @@ export default function Layout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
-  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
-  const isEditor = isAdmin || user?.role?.name === 'editor' || user?.role?.permissions?.includes('articles:write');
+  const canSeeAdmin = canAccessAdminPanel(user);
+  const isEditor = isEditorLike(user);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -67,7 +68,7 @@ export default function Layout() {
               <ConciergeBell size={16} color="#FFFBF2" />
             </div>
             <div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text)', letterSpacing: '-0.01em' }}>IT Guide</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.95rem', color: 'var(--text)', letterSpacing: '-0.01em' }}>Staff Guide</div>
               <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>Knowledge Base</div>
             </div>
           </Link>
@@ -86,7 +87,7 @@ export default function Layout() {
             </>
           )}
 
-          {isAdmin && (
+          {canSeeAdmin && (
             <div style={{ marginTop: 8 }}>
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
@@ -152,6 +153,9 @@ export default function Layout() {
             </div>
           )}
         </div>
+        <div style={{ padding: '6px 8px', textAlign: 'center' }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>v{__APP_VERSION__}</span>
+        </div>
       </aside>
 
       {sidebarOpen && (
@@ -169,7 +173,7 @@ export default function Layout() {
           <button className="btn btn-ghost btn-sm" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
-          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>IT Guide</span>
+          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Staff Guide</span>
         </header>
 
         <main style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>

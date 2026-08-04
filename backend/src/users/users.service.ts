@@ -24,7 +24,7 @@ export class UsersService implements OnModuleInit {
         const hashed = await bcrypt.hash('admin1234', 10);
         await this.usersRepository.save({
           username: 'admin',
-          email: 'admin@itguide.local',
+          email: 'admin@staffguide.local',
           password: hashed,
           fullName: 'System Admin',
           role: adminRole,

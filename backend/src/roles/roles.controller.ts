@@ -7,7 +7,7 @@ import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 
 @Controller('roles')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@RequireRole('admin')
+@RequireRole('admin', 'admin:access')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

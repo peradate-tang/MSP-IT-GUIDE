@@ -28,6 +28,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`🚀 IT Guide API running on port ${port}`);
+  console.log(`🚀 Staff Guide API running on port ${port}`);
 }
 bootstrap();

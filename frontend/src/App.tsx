@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './lib/authStore';
+import { canAccessAdminPanel, isEditorLike } from './lib/permissions';
 import Layout from './components/layout/Layout';
 import LoginPage from './pages/auth/LoginPage';
 import HomePage from './pages/HomePage';
@@ -22,16 +23,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function RequireAdmin({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
   if (!user) return <Navigate to="/" replace />;
-  if (user.role?.name !== 'admin') return <Navigate to="/" replace />;
+  if (!canAccessAdminPanel(user)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function RequireEditor({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.role?.name === 'admin' || user?.role?.permissions?.includes('*');
-  const isEditor = isAdmin || user?.role?.name === 'editor' || user?.role?.permissions?.includes('articles:write');
   if (!user) return <Navigate to="/" replace />;
-  if (!isEditor) return <Navigate to="/" replace />;
+  if (!isEditorLike(user)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
