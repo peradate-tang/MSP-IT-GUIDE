@@ -149,7 +149,7 @@ export default function AdminRolesPage() {
                         fontSize: '0.75rem', padding: '2px 8px',
                         background: p === '*' ? 'var(--accent-dim)' : 'var(--bg-3)',
                         color: p === '*' ? 'var(--accent)' : 'var(--text-2)',
-                        border: `1px solid ${p === '*' ? 'rgba(169,129,43,0.3)' : 'var(--border)'}`,
+                        border: `1px solid ${p === '*' ? 'rgba(21,156,147,0.3)' : 'var(--border)'}`,
                         borderRadius: 4, fontFamily: 'var(--font-mono)',
                       }}>{p}</code>
                     ))}

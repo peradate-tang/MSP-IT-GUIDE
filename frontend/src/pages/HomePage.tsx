@@ -32,7 +32,7 @@ export default function HomePage() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '4px 12px', background: 'var(--accent-dim)',
-            border: '1px solid rgba(169,129,43,0.25)', borderRadius: 100,
+            border: '1px solid rgba(21,156,147,0.25)', borderRadius: 100,
             fontSize: '0.75rem', color: 'var(--accent)', fontFamily: 'var(--font-mono)',
             marginBottom: 16,
           }}>
